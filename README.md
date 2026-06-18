@@ -10,7 +10,7 @@ total spend, spend-by-category, and the latest power/torque figures.
 
 ## Architecture
 
-A conventional layered REST service, organised **package-by-feature**:
+A conventional layered REST service, organised **package-by-layer** — the same shape as a typical Spring microservice (a single bounded context split by technical layer):
 
 ```
 HTTP ─▶ Controller ─▶ Service ─▶ Repository (Spring Data JPA) ─▶ PostgreSQL
@@ -18,11 +18,13 @@ HTTP ─▶ Controller ─▶ Service ─▶ Repository (Spring Data JPA) ─▶
 
 ```
 src/main/java/com/miguelpimenta/buildlog/
-├── vehicle/        Vehicle CRUD (entity, repo, service, controller, mapper, dto/)
-├── modification/   Modifications belonging to a vehicle
-├── dyno/           Dyno (rolling-road) results
-├── summary/        Derived build-summary endpoint (composes the modules above)
-└── common/         Global exception handling, error + pagination DTOs
+├── controller/   REST controllers (Vehicle, Modification, Dyno, VehicleSummary)
+├── service/      Business logic + transaction boundaries
+├── repository/   Spring Data JPA repositories
+├── model/        JPA entities (Vehicle, Modification, ModificationCategory, DynoResult)
+├── dto/          Request / response records
+├── mapper/       Entity <-> DTO mappers
+└── exception/    Global handler, error + pagination responses
 ```
 
 Key decisions:
@@ -36,11 +38,6 @@ Key decisions:
 - **Config via environment** — the production profile reads the database connection
   entirely from env vars, so no credentials live in source.
 - **Actuator health** at `/actuator/health` for load-balancer / deploy checks.
-- **Verified modular monolith** — each top-level package is a [Spring Modulith](https://spring.io/projects/spring-modulith)
-  module, and an architecture test (`ModularityTests`) fails the build if a module reaches into another's
-  internals or if a dependency *cycle* appears. That's why the build summary is its own `summary` module:
-  it depends on `vehicle`/`modification`/`dyno`, never the reverse. `./mvnw test` also regenerates C4 module
-  diagrams under `target/spring-modulith-docs/`.
 
 ## API
 
@@ -141,9 +138,6 @@ curl http://localhost:8080/actuator/health    # {"status":"UP"}
 The integration test (`VehicleApiIT`) spins up PostgreSQL via Testcontainers and drives
 a request end-to-end — create a vehicle, add a modification and a dyno result, then
 assert the aggregated summary — exercising the full controller → service → repository → DB path.
-
-`./mvnw test` also runs the Spring Modulith architecture checks (module boundaries + no cycles)
-— pure static analysis, no Docker required.
 
 ## Deployment (AWS)
 
