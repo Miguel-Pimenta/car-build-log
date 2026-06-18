@@ -1,0 +1,15 @@
+# Keep the build context small and reproducible. The Dockerfile only needs
+# pom.xml and src/ - everything else is noise or built artifacts.
+target/
+.git/
+.gitignore
+.gitattributes
+.mvn/
+mvnw
+mvnw.cmd
+.claude/
+.idea/
+*.iml
+.vscode/
+HELP.md
+*.md
