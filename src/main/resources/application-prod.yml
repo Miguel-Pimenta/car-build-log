@@ -1,0 +1,15 @@
+# Production profile (SPRING_PROFILES_ACTIVE=prod).
+# DB connection comes entirely from the environment - no credentials in source.
+# Inherits everything else (JPA, actuator, port) from application.yml.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    show-sql: false
+
+management:
+  endpoint:
+    health:
+      show-details: never
