@@ -1,6 +1,6 @@
-package com.miguelpimenta.buildlog.vehicle;
+package com.miguelpimenta.buildlog.summary;
 
-import com.miguelpimenta.buildlog.vehicle.dto.VehicleSummaryResponse;
+import com.miguelpimenta.buildlog.summary.dto.VehicleSummaryResponse;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

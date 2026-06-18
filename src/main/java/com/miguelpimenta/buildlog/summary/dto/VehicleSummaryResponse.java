@@ -1,4 +1,4 @@
-package com.miguelpimenta.buildlog.vehicle.dto;
+package com.miguelpimenta.buildlog.summary.dto;
 
 import com.miguelpimenta.buildlog.modification.ModificationCategory;
 import java.math.BigDecimal;
