@@ -1,4 +1,4 @@
-package com.miguelpimenta.buildlog.vehicle;
+package com.miguelpimenta.buildlog.summary;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -10,7 +10,9 @@ import com.miguelpimenta.buildlog.dyno.DynoResultRepository;
 import com.miguelpimenta.buildlog.modification.Modification;
 import com.miguelpimenta.buildlog.modification.ModificationCategory;
 import com.miguelpimenta.buildlog.modification.ModificationRepository;
-import com.miguelpimenta.buildlog.vehicle.dto.VehicleSummaryResponse;
+import com.miguelpimenta.buildlog.summary.dto.VehicleSummaryResponse;
+import com.miguelpimenta.buildlog.vehicle.Vehicle;
+import com.miguelpimenta.buildlog.vehicle.VehicleService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -24,8 +26,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * The summary aggregation is the only non-CRUD business logic, so it gets the
- * most thorough unit coverage. Repositories are mocked so the test exercises
- * the arithmetic, not the database.
+ * most thorough unit coverage. Repositories and the vehicle lookup are mocked
+ * so the test exercises the arithmetic, not the database.
  */
 @ExtendWith(MockitoExtension.class)
 class VehicleSummaryServiceTest {
