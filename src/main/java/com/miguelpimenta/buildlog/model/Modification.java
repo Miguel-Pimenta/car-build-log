@@ -49,7 +49,6 @@ public class Modification {
     @Column(name = "part_number")
     private String partNumber;
 
-    // Money is always BigDecimal, never double. 12 digits, 2 decimal places.
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal cost;
 

@@ -19,9 +19,7 @@ public class DynoService {
     private final VehicleService vehicleService;
     private final DynoMapper dynoMapper;
 
-    public DynoService(DynoResultRepository dynoResultRepository,
-                       VehicleService vehicleService,
-                       DynoMapper dynoMapper) {
+    public DynoService(DynoResultRepository dynoResultRepository, VehicleService vehicleService, DynoMapper dynoMapper) {
         this.dynoResultRepository = dynoResultRepository;
         this.vehicleService = vehicleService;
         this.dynoMapper = dynoMapper;
@@ -36,8 +34,6 @@ public class DynoService {
 
     public List<DynoResponse> listForVehicle(UUID vehicleId) {
         vehicleService.getEntity(vehicleId); // 404 if the vehicle does not exist
-        return dynoResultRepository.findByVehicleIdOrderByMeasuredAtDesc(vehicleId).stream()
-                .map(dynoMapper::toResponse)
-                .toList();
+        return dynoResultRepository.findByVehicleIdOrderByMeasuredAtDesc(vehicleId).stream().map(dynoMapper::toResponse).toList();
     }
 }

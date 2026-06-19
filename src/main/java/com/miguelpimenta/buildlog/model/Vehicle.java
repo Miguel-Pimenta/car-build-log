@@ -34,7 +34,6 @@ public class Vehicle {
     @Column(nullable = false)
     private String model;
 
-    // "year" is awkward as a SQL identifier; map it to a safe column name.
     @Column(name = "model_year", nullable = false)
     private int year;
 

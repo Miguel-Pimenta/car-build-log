@@ -24,8 +24,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponse.of(HttpStatus.NOT_FOUND, ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.of(HttpStatus.NOT_FOUND, ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -34,27 +33,23 @@ public class GlobalExceptionHandler {
         for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
             fieldErrors.putIfAbsent(fe.getField(), fe.getDefaultMessage());
         }
-        return ResponseEntity.badRequest()
-                .body(ErrorResponse.of(HttpStatus.BAD_REQUEST, "Validation failed", fieldErrors));
+        return ResponseEntity.badRequest().body(ErrorResponse.of(HttpStatus.BAD_REQUEST, "Validation failed", fieldErrors));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleUnreadable(HttpMessageNotReadableException ex) {
-        return ResponseEntity.badRequest()
-                .body(ErrorResponse.of(HttpStatus.BAD_REQUEST, "Malformed or unreadable request body"));
+        return ResponseEntity.badRequest().body(ErrorResponse.of(HttpStatus.BAD_REQUEST, "Malformed or unreadable request body"));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         String message = "Invalid value for parameter '%s'".formatted(ex.getName());
-        return ResponseEntity.badRequest()
-                .body(ErrorResponse.of(HttpStatus.BAD_REQUEST, message));
+        return ResponseEntity.badRequest().body(ErrorResponse.of(HttpStatus.BAD_REQUEST, message));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
         log.error("Unhandled exception", ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred"));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ErrorResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred"));
     }
 }

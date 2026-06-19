@@ -28,8 +28,7 @@ public class ModificationController {
     }
 
     @PostMapping("/vehicles/{vehicleId}/modifications")
-    public ResponseEntity<ModificationResponse> add(@PathVariable UUID vehicleId,
-                                                    @Valid @RequestBody ModificationRequest request) {
+    public ResponseEntity<ModificationResponse> add(@PathVariable UUID vehicleId, @Valid @RequestBody ModificationRequest request) {
         ModificationResponse created = modificationService.addToVehicle(vehicleId, request);
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/v1/modifications/{id}")

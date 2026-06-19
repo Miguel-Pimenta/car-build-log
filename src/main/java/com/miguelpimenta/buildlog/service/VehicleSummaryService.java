@@ -43,9 +43,7 @@ public class VehicleSummaryService {
 
         List<Modification> mods = modificationRepository.findByVehicleId(vehicleId);
 
-        BigDecimal totalSpend = mods.stream()
-                .map(Modification::getCost)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalSpend = mods.stream().map(Modification::getCost).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // EnumMap keeps the breakdown in the enum's declared order for stable output.
         Map<ModificationCategory, BigDecimal> spendByCategory = new EnumMap<>(ModificationCategory.class);
@@ -53,23 +51,12 @@ public class VehicleSummaryService {
             spendByCategory.merge(mod.getCategory(), mod.getCost(), BigDecimal::add);
         }
 
-        DynoResult latest = dynoResultRepository
-                .findFirstByVehicleIdOrderByMeasuredAtDescCreatedAtDesc(vehicleId)
-                .orElse(null);
+        DynoResult latest = dynoResultRepository.findFirstByVehicleIdOrderByMeasuredAtDescCreatedAtDesc(vehicleId).orElse(null);
 
-        DynoSnapshot latestDyno = (latest == null) ? null
-                : new DynoSnapshot(latest.getPowerHp(), latest.getTorqueNm(), latest.getMeasuredAt());
+        DynoSnapshot latestDyno = (latest == null) ? null : new DynoSnapshot(latest.getPowerHp(), latest.getTorqueNm(), latest.getMeasuredAt());
         Integer currentPowerHp = (latest == null) ? null : latest.getPowerHp();
         Integer currentTorqueNm = (latest == null) ? null : latest.getTorqueNm();
 
-        return new VehicleSummaryResponse(
-                vehicle.getId(),
-                mods.size(),
-                totalSpend,
-                spendByCategory,
-                latestDyno,
-                currentPowerHp,
-                currentTorqueNm
-        );
+        return new VehicleSummaryResponse(vehicle.getId(),mods.size(),totalSpend,spendByCategory,latestDyno,currentPowerHp,currentTorqueNm);
     }
 }
