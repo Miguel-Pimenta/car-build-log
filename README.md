@@ -1,10 +1,20 @@
-# Car Build Log API
+# Car Build Log
 
-A REST API for tracking modified-car builds — vehicles, the modifications made to
-them, and dyno results — with a derived **build-summary** endpoint that aggregates
+A full-stack app for tracking modified-car builds — vehicles, the modifications made
+to them, and dyno results — with a derived **build-summary** endpoint that aggregates
 total spend, spend-by-category, and the latest power/torque figures.
 
-**Stack:** Java 21 · Spring Boot 3.5 · PostgreSQL 16 · Spring Data JPA · Docker · AWS (EC2 + RDS)
+- **Backend** — a Spring Boot REST API (the bulk of the project; documented below).
+- **Frontend** — a small React / Next.js UI in [`frontend/`](frontend/).
+
+**Stack:** Java 21 · Spring Boot 3.5 · PostgreSQL 16 · Spring Data JPA · Docker · AWS (EC2 + RDS) · React (Next.js) · TypeScript
+
+```
+car-build-log/
+├── src/, pom.xml     Spring Boot backend (REST API)
+├── docs/DEPLOY.md    AWS deploy runbook
+└── frontend/         React / Next.js frontend (see frontend/README.md)
+```
 
 ---
 
@@ -95,7 +105,7 @@ Validation error body (every handled error uses this shape):
 }
 ```
 
-## Running locally
+## Running the backend locally
 
 **Prerequisites:** Java 21 and Docker.
 
@@ -128,6 +138,22 @@ curl http://localhost:8080/actuator/health    # {"status":"UP"}
 | `DB_PASSWORD` | Database password | `localdev` |
 | `SPRING_PROFILES_ACTIVE` | Set to `prod` in production (requires the three vars above) | — |
 
+## Frontend
+
+A small React / Next.js UI lives in [`frontend/`](frontend/). It's intentionally simple —
+plain client components using `useState` + `useEffect` + `fetch`.
+
+```bash
+cd frontend
+cp .env.local.example .env.local   # set NEXT_PUBLIC_API_BASE_URL to the API's base URL
+npm install
+npm run dev                        # http://localhost:3000
+```
+
+The backend must be running and must allow the frontend's origin via CORS
+(`app.cors.allowed-origins`, default `http://localhost:3000`). More detail in
+[frontend/README.md](frontend/README.md).
+
 ## Testing
 
 ```bash
@@ -153,3 +179,4 @@ instance, with the DB connection supplied as environment variables and
 - **CI/CD** — GitHub Actions to build, test (Testcontainers), and publish the image to ECR.
 - **Caching** — cache the read-heavy summary endpoint.
 - **Observability** — structured logging, metrics via Micrometer/Prometheus, request tracing.
+- **Deploy the frontend** — e.g. Vercel, pointed at the deployed API's URL.
