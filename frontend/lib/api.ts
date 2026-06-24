@@ -39,9 +39,14 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 // ---- Vehicles ----
 
-export function getVehicles() {
+export function getVehicles(search?: string) {
   // size=100 keeps it simple - we just load them all instead of paging.
-  return request<PageResponse<VehicleResponse>>("/vehicles?page=0&size=100");
+  let path = "/vehicles?page=0&size=100";
+  if (search && search.trim() !== "") {
+    // encodeURIComponent makes spaces/symbols safe inside a URL (e.g. "type r").
+    path += `&search=${encodeURIComponent(search.trim())}`;
+  }
+  return request<PageResponse<VehicleResponse>>(path);
 }
 
 export function getVehicle(id: string) {
