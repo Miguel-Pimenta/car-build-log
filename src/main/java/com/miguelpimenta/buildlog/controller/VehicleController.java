@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -42,8 +43,10 @@ public class VehicleController {
   }
 
   @GetMapping
-  public PageResponse<VehicleResponse> list(@PageableDefault(size = 20) Pageable pageable) {
-    return PageResponse.from(vehicleService.list(pageable));
+  public PageResponse<VehicleResponse> list(
+      @PageableDefault(size = 20) Pageable pageable,
+      @RequestParam(required = false) String search) {
+    return PageResponse.from(vehicleService.list(search, pageable));
   }
 
   @GetMapping("/{id}")

@@ -13,6 +13,7 @@ import com.miguelpimenta.buildlog.exception.ResourceNotFoundException;
 import com.miguelpimenta.buildlog.mapper.VehicleMapper;
 import com.miguelpimenta.buildlog.model.Vehicle;
 import com.miguelpimenta.buildlog.repository.VehicleRepository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +21,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class VehicleServiceTest {
@@ -91,5 +96,60 @@ class VehicleServiceTest {
     assertThat(response.model()).isEqualTo("Golf R");
     assertThat(response.year()).isEqualTo(2018);
     assertThat(response.engineCode()).isEqualTo("EA888");
+  }
+
+  @Test
+  void listWithSearchTermTrimsAndQueriesByMakeOrModel() {
+    Pageable pageable = PageRequest.of(0, 20);
+    Vehicle vehicle = new Vehicle();
+    vehicle.setId(UUID.randomUUID());
+    vehicle.setMake("Volkswagen");
+    vehicle.setModel("Golf");
+    vehicle.setYear(2015);
+    vehicle.setEngineCode("EA288");
+
+    // Surrounding whitespace is trimmed, and the same term feeds both conditions.
+    when(vehicleRepository.findByMakeContainingIgnoreCaseOrModelContainingIgnoreCase(
+            "Vol", "Vol", pageable))
+        .thenReturn(new PageImpl<>(List.of(vehicle)));
+
+    Page<VehicleResponse> result = vehicleService.list("  Vol  ", pageable);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getContent().get(0).make()).isEqualTo("Volkswagen");
+    verify(vehicleRepository, never()).findAll(any(Pageable.class));
+  }
+
+  @Test
+  void listWithoutSearchTermReturnsAll() {
+    Pageable pageable = PageRequest.of(0, 20);
+    Vehicle vehicle = new Vehicle();
+    vehicle.setId(UUID.randomUUID());
+    vehicle.setMake("BMW");
+    vehicle.setModel("M3");
+    vehicle.setYear(2010);
+    vehicle.setEngineCode("S54");
+
+    when(vehicleRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(vehicle)));
+
+    Page<VehicleResponse> result = vehicleService.list(null, pageable);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getContent().get(0).model()).isEqualTo("M3");
+    verify(vehicleRepository, never())
+        .findByMakeContainingIgnoreCaseOrModelContainingIgnoreCase(any(), any(), any());
+  }
+
+  @Test
+  void listWithBlankSearchTermReturnsAll() {
+    Pageable pageable = PageRequest.of(0, 20);
+    when(vehicleRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of()));
+
+    // Whitespace-only counts as blank (isBlank), so it must NOT hit the search query.
+    vehicleService.list("   ", pageable);
+
+    verify(vehicleRepository).findAll(pageable);
+    verify(vehicleRepository, never())
+        .findByMakeContainingIgnoreCaseOrModelContainingIgnoreCase(any(), any(), any());
   }
 }
