@@ -10,29 +10,28 @@ import org.springframework.stereotype.Component;
 @Component
 public class ModificationMapper {
 
-    public Modification toEntity(ModificationRequest request, Vehicle vehicle) {
-        Modification modification = new Modification();
-        modification.setVehicle(vehicle);
-        modification.setCategory(request.category());
-        modification.setName(request.name());
-        modification.setPartNumber(request.partNumber());
-        modification.setCost(request.cost());
-        modification.setInstalledAt(request.installedAt());
-        modification.setMileageKmAtInstall(request.mileageKmAtInstall());
-        return modification;
-    }
+  public Modification toEntity(ModificationRequest request, Vehicle vehicle) {
+    Modification modification = new Modification();
+    modification.setVehicle(vehicle);
+    modification.setCategory(request.category());
+    modification.setName(request.name());
+    modification.setPartNumber(request.partNumber());
+    modification.setCost(request.cost());
+    modification.setInstalledAt(request.installedAt());
+    modification.setMileageKmAtInstall(request.mileageKmAtInstall());
+    return modification;
+  }
 
-    public ModificationResponse toResponse(Modification modification) {
-        return new ModificationResponse(
-                modification.getId(),
-                modification.getVehicle().getId(),
-                modification.getCategory(),
-                modification.getName(),
-                modification.getPartNumber(),
-                modification.getCost(),
-                modification.getInstalledAt(),
-                modification.getMileageKmAtInstall(),
-                modification.getCreatedAt()
-        );
-    }
+  public ModificationResponse toResponse(Modification modification) {
+    return new ModificationResponse(
+        modification.getId(),
+        modification.getVehicle().getId(),
+        modification.getCategory(),
+        modification.getName(),
+        modification.getPartNumber(),
+        modification.getCost(),
+        modification.getInstalledAt(),
+        modification.getMileageKmAtInstall(),
+        modification.getCreatedAt());
+  }
 }

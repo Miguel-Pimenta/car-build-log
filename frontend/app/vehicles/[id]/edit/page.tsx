@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import VehicleForm from '@/components/VehicleForm';
-import { getVehicle, updateVehicle } from '@/lib/api';
-import type { VehicleRequest } from '@/lib/types';
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import VehicleForm from "@/components/VehicleForm";
+import { getVehicle, updateVehicle } from "@/lib/api";
+import type { VehicleRequest } from "@/lib/types";
 
 export default function EditVehiclePage() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export default function EditVehiclePage() {
   const id = params.id as string;
 
   const [initialValue, setInitialValue] = useState<VehicleRequest | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Load the existing vehicle once, so we can pre-fill the form with its values.
   useEffect(() => {

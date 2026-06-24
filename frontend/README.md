@@ -26,13 +26,13 @@ modifications, and dyno results). It talks to the Car Build Log REST API.
 Every page is a **client component** (`'use client'`) that loads data with the
 standard React pattern: `useState` + `useEffect` + `fetch`.
 
-| File | What it does |
-|------|--------------|
-| `lib/types.ts` | TypeScript types describing the data |
-| `lib/api.ts` | One `request` helper + a function per backend endpoint |
-| `app/layout.tsx` | The shell (header) shown on every page |
-| `app/page.tsx` | The vehicle list |
-| `app/vehicles/new/page.tsx` | Add a vehicle |
-| `app/vehicles/[id]/page.tsx` | One vehicle: summary, modifications, dyno + add forms |
-| `app/vehicles/[id]/edit/page.tsx` | Edit a vehicle |
-| `components/VehicleForm.tsx` | The form reused by "new" and "edit" |
+| File                              | What it does                                           |
+| --------------------------------- | ------------------------------------------------------ |
+| `lib/types.ts`                    | TypeScript types describing the data                   |
+| `lib/api.ts`                      | One `request` helper + a function per backend endpoint |
+| `app/layout.tsx`                  | The shell (header) shown on every page                 |
+| `app/page.tsx`                    | The vehicle list                                       |
+| `app/vehicles/new/page.tsx`       | Add a vehicle                                          |
+| `app/vehicles/[id]/page.tsx`      | One vehicle: summary, modifications, dyno + add forms  |
+| `app/vehicles/[id]/edit/page.tsx` | Edit a vehicle                                         |
+| `components/VehicleForm.tsx`      | The form reused by "new" and "edit"                    |

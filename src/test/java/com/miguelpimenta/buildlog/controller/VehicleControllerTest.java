@@ -24,65 +24,70 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Web-layer slice test: validation, status codes, the Location header and the
- * error-body shape. The service is mocked, so no database (or Docker) is needed.
+ * Web-layer slice test: validation, status codes, the Location header and the error-body shape. The
+ * service is mocked, so no database (or Docker) is needed.
  */
 @WebMvcTest(VehicleController.class)
 class VehicleControllerTest {
 
-    @Autowired
-    MockMvc mockMvc;
+  @Autowired MockMvc mockMvc;
 
-    @MockitoBean
-    VehicleService vehicleService;
+  @MockitoBean VehicleService vehicleService;
 
-    @Test
-    void createReturns201WithLocationHeader() throws Exception {
-        UUID id = UUID.randomUUID();
-        when(vehicleService.create(any())).thenReturn(
-                new VehicleResponse(id, "Volkswagen", "Golf", 2015, "EA288", null, Instant.now()));
+  @Test
+  void createReturns201WithLocationHeader() throws Exception {
+    UUID id = UUID.randomUUID();
+    when(vehicleService.create(any()))
+        .thenReturn(
+            new VehicleResponse(id, "Volkswagen", "Golf", 2015, "EA288", null, Instant.now()));
 
-        mockMvc.perform(post("/api/v1/vehicles")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+    mockMvc
+        .perform(
+            post("/api/v1/vehicles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
                                 {"make":"Volkswagen","model":"Golf","year":2015,"engineCode":"EA288"}
                                 """))
-                .andExpect(status().isCreated())
-                .andExpect(header().string("Location", endsWith("/api/v1/vehicles/" + id)))
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.make").value("Volkswagen"));
-    }
+        .andExpect(status().isCreated())
+        .andExpect(header().string("Location", endsWith("/api/v1/vehicles/" + id)))
+        .andExpect(jsonPath("$.id").value(id.toString()))
+        .andExpect(jsonPath("$.make").value("Volkswagen"));
+  }
 
-    @Test
-    void createRejectsInvalidPayloadWith400AndFieldErrors() throws Exception {
-        mockMvc.perform(post("/api/v1/vehicles")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
+  @Test
+  void createRejectsInvalidPayloadWith400AndFieldErrors() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/v1/vehicles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
                                 {"make":"","model":"Golf","year":1850,"engineCode":"EA288"}
                                 """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.fieldErrors.make").exists())
-                .andExpect(jsonPath("$.fieldErrors.year").exists());
-    }
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Bad Request"))
+        .andExpect(jsonPath("$.fieldErrors.make").exists())
+        .andExpect(jsonPath("$.fieldErrors.year").exists());
+  }
 
-    @Test
-    void getReturns404WithErrorBodyWhenMissing() throws Exception {
-        UUID id = UUID.randomUUID();
-        when(vehicleService.get(id)).thenThrow(ResourceNotFoundException.of("Vehicle", id));
+  @Test
+  void getReturns404WithErrorBodyWhenMissing() throws Exception {
+    UUID id = UUID.randomUUID();
+    when(vehicleService.get(id)).thenThrow(ResourceNotFoundException.of("Vehicle", id));
 
-        mockMvc.perform(get("/api/v1/vehicles/{id}", id))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.message").value(containsString(id.toString())));
-    }
+    mockMvc
+        .perform(get("/api/v1/vehicles/{id}", id))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.status").value(404))
+        .andExpect(jsonPath("$.message").value(containsString(id.toString())));
+  }
 
-    @Test
-    void deleteReturns204() throws Exception {
-        UUID id = UUID.randomUUID();
+  @Test
+  void deleteReturns204() throws Exception {
+    UUID id = UUID.randomUUID();
 
-        mockMvc.perform(delete("/api/v1/vehicles/{id}", id))
-                .andExpect(status().isNoContent());
-    }
+    mockMvc.perform(delete("/api/v1/vehicles/{id}", id)).andExpect(status().isNoContent());
+  }
 }

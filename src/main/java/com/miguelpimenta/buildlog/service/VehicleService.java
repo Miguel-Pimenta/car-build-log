@@ -16,50 +16,51 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class VehicleService {
 
-    private final VehicleRepository vehicleRepository;
-    private final VehicleMapper vehicleMapper;
+  private final VehicleRepository vehicleRepository;
+  private final VehicleMapper vehicleMapper;
 
-    public VehicleService(VehicleRepository vehicleRepository, VehicleMapper vehicleMapper) {
-        this.vehicleRepository = vehicleRepository;
-        this.vehicleMapper = vehicleMapper;
-    }
+  public VehicleService(VehicleRepository vehicleRepository, VehicleMapper vehicleMapper) {
+    this.vehicleRepository = vehicleRepository;
+    this.vehicleMapper = vehicleMapper;
+  }
 
-    @Transactional
-    public VehicleResponse create(VehicleRequest request) {
-        Vehicle saved = vehicleRepository.save(vehicleMapper.toEntity(request));
-        return vehicleMapper.toResponse(saved);
-    }
+  @Transactional
+  public VehicleResponse create(VehicleRequest request) {
+    Vehicle saved = vehicleRepository.save(vehicleMapper.toEntity(request));
+    return vehicleMapper.toResponse(saved);
+  }
 
-    public Page<VehicleResponse> list(Pageable pageable) {
-        return vehicleRepository.findAll(pageable).map(vehicleMapper::toResponse);
-    }
+  public Page<VehicleResponse> list(Pageable pageable) {
+    return vehicleRepository.findAll(pageable).map(vehicleMapper::toResponse);
+  }
 
-    public VehicleResponse get(UUID id) {
-        return vehicleMapper.toResponse(getEntity(id));
-    }
+  public VehicleResponse get(UUID id) {
+    return vehicleMapper.toResponse(getEntity(id));
+  }
 
-    @Transactional
-    public VehicleResponse update(UUID id, VehicleRequest request) {
-        Vehicle vehicle = getEntity(id);
-        vehicleMapper.apply(request, vehicle);
-        // Managed entity: JPA flushes the changes on commit, no explicit save needed.
-        return vehicleMapper.toResponse(vehicle);
-    }
+  @Transactional
+  public VehicleResponse update(UUID id, VehicleRequest request) {
+    Vehicle vehicle = getEntity(id);
+    vehicleMapper.apply(request, vehicle);
+    // Managed entity: JPA flushes the changes on commit, no explicit save needed.
+    return vehicleMapper.toResponse(vehicle);
+  }
 
-    @Transactional
-    public void delete(UUID id) {
-        if (!vehicleRepository.existsById(id)) {
-            throw ResourceNotFoundException.of("Vehicle", id);
-        }
-        vehicleRepository.deleteById(id);
+  @Transactional
+  public void delete(UUID id) {
+    if (!vehicleRepository.existsById(id)) {
+      throw ResourceNotFoundException.of("Vehicle", id);
     }
+    vehicleRepository.deleteById(id);
+  }
 
-    /**
-     * Loads a vehicle or throws 404. Shared with the modification, dyno and
-     * summary services so the not-found behaviour lives in one place.
-     */
-    public Vehicle getEntity(UUID id) {
-        return vehicleRepository.findById(id)
-                .orElseThrow(() -> ResourceNotFoundException.of("Vehicle", id));
-    }
+  /**
+   * Loads a vehicle or throws 404. Shared with the modification, dyno and summary services so the
+   * not-found behaviour lives in one place.
+   */
+  public Vehicle getEntity(UUID id) {
+    return vehicleRepository
+        .findById(id)
+        .orElseThrow(() -> ResourceNotFoundException.of("Vehicle", id));
+  }
 }

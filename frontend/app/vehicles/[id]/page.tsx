@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import {
   getVehicle,
   getVehicleSummary,
@@ -12,15 +12,15 @@ import {
   deleteModification,
   createDynoResult,
   deleteVehicle,
-} from '@/lib/api';
-import { MODIFICATION_CATEGORIES } from '@/lib/types';
+} from "@/lib/api";
+import { MODIFICATION_CATEGORIES } from "@/lib/types";
 import type {
   VehicleResponse,
   VehicleSummaryResponse,
   ModificationResponse,
   DynoResponse,
   ModificationCategory,
-} from '@/lib/types';
+} from "@/lib/types";
 
 export default function VehicleDetailPage() {
   const params = useParams(); // reads the {id} from the URL
@@ -33,7 +33,7 @@ export default function VehicleDetailPage() {
   const [mods, setMods] = useState<ModificationResponse[]>([]);
   const [dynos, setDynos] = useState<DynoResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Bumping `refreshKey` re-runs the effect below, which re-loads everything.
   // We call reload() after adding/deleting so the screen stays up to date.
@@ -50,7 +50,7 @@ export default function VehicleDetailPage() {
         setMods(await getModifications(id));
         setDynos(await getDynoResults(id));
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not load vehicle');
+        setError(err instanceof Error ? err.message : "Could not load vehicle");
       } finally {
         setLoading(false);
       }
@@ -59,9 +59,9 @@ export default function VehicleDetailPage() {
   }, [id, refreshKey]);
 
   async function handleDeleteVehicle() {
-    if (!window.confirm('Delete this vehicle and everything in it?')) return;
+    if (!window.confirm("Delete this vehicle and everything in it?")) return;
     await deleteVehicle(id);
-    router.push('/'); // back to the list
+    router.push("/"); // back to the list
   }
 
   async function handleDeleteMod(modId: string) {
@@ -82,10 +82,15 @@ export default function VehicleDetailPage() {
             {vehicle.year} {vehicle.make} {vehicle.model}
           </h1>
           <p className="text-gray-500">{vehicle.engineCode}</p>
-          {vehicle.notes && <p className="mt-1 text-gray-600">{vehicle.notes}</p>}
+          {vehicle.notes && (
+            <p className="mt-1 text-gray-600">{vehicle.notes}</p>
+          )}
         </div>
         <div className="flex gap-2 shrink-0">
-          <Link href={`/vehicles/${id}/edit`} className="border px-3 py-1.5 rounded">
+          <Link
+            href={`/vehicles/${id}/edit`}
+            className="border px-3 py-1.5 rounded"
+          >
             Edit
           </Link>
           <button
@@ -106,11 +111,19 @@ export default function VehicleDetailPage() {
             <Stat label="Total spend" value={formatMoney(summary.totalSpend)} />
             <Stat
               label="Power"
-              value={summary.currentPowerHp !== null ? `${summary.currentPowerHp} HP` : '—'}
+              value={
+                summary.currentPowerHp !== null
+                  ? `${summary.currentPowerHp} HP`
+                  : "—"
+              }
             />
             <Stat
               label="Torque"
-              value={summary.currentTorqueNm !== null ? `${summary.currentTorqueNm} Nm` : '—'}
+              value={
+                summary.currentTorqueNm !== null
+                  ? `${summary.currentTorqueNm} Nm`
+                  : "—"
+              }
             />
           </div>
         </section>
@@ -118,7 +131,9 @@ export default function VehicleDetailPage() {
 
       {/* ---- Modifications ---- */}
       <section>
-        <h2 className="text-lg font-semibold mb-2">Modifications ({mods.length})</h2>
+        <h2 className="text-lg font-semibold mb-2">
+          Modifications ({mods.length})
+        </h2>
         {mods.length === 0 ? (
           <p className="text-gray-500 mb-3">No modifications yet.</p>
         ) : (
@@ -130,10 +145,14 @@ export default function VehicleDetailPage() {
               >
                 <div>
                   <p className="font-medium">
-                    {mod.name} <span className="text-xs text-gray-500">({mod.category})</span>
+                    {mod.name}{" "}
+                    <span className="text-xs text-gray-500">
+                      ({mod.category})
+                    </span>
                   </p>
                   <p className="text-sm text-gray-500">
-                    {formatMoney(mod.cost)} · {mod.installedAt} · {mod.mileageKmAtInstall} km
+                    {formatMoney(mod.cost)} · {mod.installedAt} ·{" "}
+                    {mod.mileageKmAtInstall} km
                   </p>
                 </div>
                 <button
@@ -151,7 +170,9 @@ export default function VehicleDetailPage() {
 
       {/* ---- Dyno results ---- */}
       <section>
-        <h2 className="text-lg font-semibold mb-2">Dyno results ({dynos.length})</h2>
+        <h2 className="text-lg font-semibold mb-2">
+          Dyno results ({dynos.length})
+        </h2>
         {dynos.length === 0 ? (
           <p className="text-gray-500 mb-3">No dyno runs yet.</p>
         ) : (
@@ -163,7 +184,7 @@ export default function VehicleDetailPage() {
                 </p>
                 <p className="text-sm text-gray-500">
                   {dyno.measuredAt}
-                  {dyno.notes ? ` · ${dyno.notes}` : ''}
+                  {dyno.notes ? ` · ${dyno.notes}` : ""}
                 </p>
               </li>
             ))}
@@ -187,7 +208,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 }
 
 function formatMoney(value: number): string {
-  return '€' + Number(value).toFixed(2);
+  return "€" + Number(value).toFixed(2);
 }
 
 // Form to add a modification. It keeps its own state for the inputs, and calls
@@ -199,16 +220,16 @@ function AddModificationForm({
   vehicleId: string;
   onAdded: () => void;
 }) {
-  const [category, setCategory] = useState<ModificationCategory>('ENGINE');
-  const [name, setName] = useState('');
-  const [cost, setCost] = useState('');
-  const [installedAt, setInstalledAt] = useState('');
-  const [mileage, setMileage] = useState('');
-  const [error, setError] = useState('');
+  const [category, setCategory] = useState<ModificationCategory>("ENGINE");
+  const [name, setName] = useState("");
+  const [cost, setCost] = useState("");
+  const [installedAt, setInstalledAt] = useState("");
+  const [mileage, setMileage] = useState("");
+  const [error, setError] = useState("");
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError('');
+    setError("");
     try {
       await createModification(vehicleId, {
         category,
@@ -218,18 +239,23 @@ function AddModificationForm({
         mileageKmAtInstall: Number(mileage),
       });
       // Clear the inputs after a successful add.
-      setName('');
-      setCost('');
-      setInstalledAt('');
-      setMileage('');
+      setName("");
+      setCost("");
+      setInstalledAt("");
+      setMileage("");
       onAdded();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not add modification');
+      setError(
+        err instanceof Error ? err.message : "Could not add modification",
+      );
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border rounded p-3 space-y-2">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white border rounded p-3 space-y-2"
+    >
       <p className="font-medium text-sm">Add a modification</p>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="grid sm:grid-cols-2 gap-2">
@@ -271,7 +297,9 @@ function AddModificationForm({
           className="border rounded px-2 py-1.5"
         />
       </div>
-      <button className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm">Add</button>
+      <button className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm">
+        Add
+      </button>
     </form>
   );
 }
@@ -283,15 +311,15 @@ function AddDynoForm({
   vehicleId: string;
   onAdded: () => void;
 }) {
-  const [powerHp, setPowerHp] = useState('');
-  const [torqueNm, setTorqueNm] = useState('');
-  const [measuredAt, setMeasuredAt] = useState('');
-  const [notes, setNotes] = useState('');
-  const [error, setError] = useState('');
+  const [powerHp, setPowerHp] = useState("");
+  const [torqueNm, setTorqueNm] = useState("");
+  const [measuredAt, setMeasuredAt] = useState("");
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError('');
+    setError("");
     try {
       await createDynoResult(vehicleId, {
         powerHp: Number(powerHp),
@@ -299,18 +327,23 @@ function AddDynoForm({
         measuredAt,
         notes: notes || undefined,
       });
-      setPowerHp('');
-      setTorqueNm('');
-      setMeasuredAt('');
-      setNotes('');
+      setPowerHp("");
+      setTorqueNm("");
+      setMeasuredAt("");
+      setNotes("");
       onAdded();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not add dyno result');
+      setError(
+        err instanceof Error ? err.message : "Could not add dyno result",
+      );
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border rounded p-3 space-y-2">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white border rounded p-3 space-y-2"
+    >
       <p className="font-medium text-sm">Add a dyno result</p>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <div className="grid sm:grid-cols-2 gap-2">
@@ -341,7 +374,9 @@ function AddDynoForm({
           className="border rounded px-2 py-1.5"
         />
       </div>
-      <button className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm">Add</button>
+      <button className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm">
+        Add
+      </button>
     </form>
   );
 }

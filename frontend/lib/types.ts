@@ -2,25 +2,25 @@
 // They don't do anything at runtime - they just help the editor catch mistakes.
 
 export type ModificationCategory =
-  | 'ENGINE'
-  | 'EXHAUST'
-  | 'INTAKE'
-  | 'SUSPENSION'
-  | 'BRAKES'
-  | 'TUNING'
-  | 'COSMETIC'
-  | 'OTHER';
+  | "ENGINE"
+  | "EXHAUST"
+  | "INTAKE"
+  | "SUSPENSION"
+  | "BRAKES"
+  | "TUNING"
+  | "COSMETIC"
+  | "OTHER";
 
 // A plain list of the categories above, so we can build a dropdown from it.
 export const MODIFICATION_CATEGORIES: ModificationCategory[] = [
-  'ENGINE',
-  'EXHAUST',
-  'INTAKE',
-  'SUSPENSION',
-  'BRAKES',
-  'TUNING',
-  'COSMETIC',
-  'OTHER',
+  "ENGINE",
+  "EXHAUST",
+  "INTAKE",
+  "SUSPENSION",
+  "BRAKES",
+  "TUNING",
+  "COSMETIC",
+  "OTHER",
 ];
 
 // ---- What we SEND to the backend ----

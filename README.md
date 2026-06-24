@@ -53,21 +53,21 @@ Key decisions:
 
 Base path: `/api/v1`
 
-| Method | Path | Description | Success |
-|--------|------|-------------|---------|
-| `POST` | `/vehicles` | Create a vehicle | `201` + `Location` |
-| `GET` | `/vehicles?page=0&size=20` | List vehicles (paginated) | `200` |
-| `GET` | `/vehicles/{id}` | Fetch one vehicle | `200` / `404` |
-| `PUT` | `/vehicles/{id}` | Update a vehicle | `200` / `404` |
-| `DELETE` | `/vehicles/{id}` | Delete a vehicle | `204` / `404` |
-| `GET` | `/vehicles/{id}/summary` | **Aggregated build summary** | `200` |
-| `POST` | `/vehicles/{vehicleId}/modifications` | Add a modification | `201` + `Location` |
-| `GET` | `/vehicles/{vehicleId}/modifications` | List a vehicle's modifications | `200` |
-| `GET` | `/modifications/{id}` | Fetch one modification | `200` / `404` |
-| `DELETE` | `/modifications/{id}` | Delete a modification | `204` / `404` |
-| `POST` | `/vehicles/{vehicleId}/dyno` | Record a dyno result | `201` |
-| `GET` | `/vehicles/{vehicleId}/dyno` | List dyno results | `200` |
-| `GET` | `/actuator/health` | Health check | `200` |
+| Method   | Path                                  | Description                    | Success            |
+| -------- | ------------------------------------- | ------------------------------ | ------------------ |
+| `POST`   | `/vehicles`                           | Create a vehicle               | `201` + `Location` |
+| `GET`    | `/vehicles?page=0&size=20`            | List vehicles (paginated)      | `200`              |
+| `GET`    | `/vehicles/{id}`                      | Fetch one vehicle              | `200` / `404`      |
+| `PUT`    | `/vehicles/{id}`                      | Update a vehicle               | `200` / `404`      |
+| `DELETE` | `/vehicles/{id}`                      | Delete a vehicle               | `204` / `404`      |
+| `GET`    | `/vehicles/{id}/summary`              | **Aggregated build summary**   | `200`              |
+| `POST`   | `/vehicles/{vehicleId}/modifications` | Add a modification             | `201` + `Location` |
+| `GET`    | `/vehicles/{vehicleId}/modifications` | List a vehicle's modifications | `200`              |
+| `GET`    | `/modifications/{id}`                 | Fetch one modification         | `200` / `404`      |
+| `DELETE` | `/modifications/{id}`                 | Delete a modification          | `204` / `404`      |
+| `POST`   | `/vehicles/{vehicleId}/dyno`          | Record a dyno result           | `201`              |
+| `GET`    | `/vehicles/{vehicleId}/dyno`          | List dyno results              | `200`              |
+| `GET`    | `/actuator/health`                    | Health check                   | `200`              |
 
 ### Example
 
@@ -85,8 +85,8 @@ Build summary (`GET /api/v1/vehicles/{id}/summary`):
 {
   "vehicleId": "0b6f...",
   "totalModifications": 1,
-  "totalSpend": 450.00,
-  "spendByCategory": { "TUNING": 450.00 },
+  "totalSpend": 450.0,
+  "spendByCategory": { "TUNING": 450.0 },
   "latestDyno": { "powerHp": 290, "torqueNm": 410, "measuredAt": "2024-03-11" },
   "currentPowerHp": 290,
   "currentTorqueNm": 410
@@ -131,12 +131,12 @@ curl http://localhost:8080/actuator/health    # {"status":"UP"}
 
 ### Configuration
 
-| Variable | Purpose | Local default |
-|----------|---------|---------------|
-| `DB_URL` | JDBC URL | `jdbc:postgresql://localhost:5432/buildlog` |
-| `DB_USER` | Database user | `app` |
-| `DB_PASSWORD` | Database password | `localdev` |
-| `SPRING_PROFILES_ACTIVE` | Set to `prod` in production (requires the three vars above) | — |
+| Variable                 | Purpose                                                     | Local default                               |
+| ------------------------ | ----------------------------------------------------------- | ------------------------------------------- |
+| `DB_URL`                 | JDBC URL                                                    | `jdbc:postgresql://localhost:5432/buildlog` |
+| `DB_USER`                | Database user                                               | `app`                                       |
+| `DB_PASSWORD`            | Database password                                           | `localdev`                                  |
+| `SPRING_PROFILES_ACTIVE` | Set to `prod` in production (requires the three vars above) | —                                           |
 
 ## Frontend
 

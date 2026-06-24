@@ -18,8 +18,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A dyno (rolling-road) measurement for a {@link Vehicle}, capturing peak
- * power and torque on a given date.
+ * A dyno (rolling-road) measurement for a {@link Vehicle}, capturing peak power and torque on a
+ * given date.
  */
 @Entity
 @Table(name = "dyno_results")
@@ -28,31 +28,31 @@ import lombok.Setter;
 @NoArgsConstructor
 public class DynoResult {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "vehicle_id", nullable = false)
+  private Vehicle vehicle;
 
-    @Column(name = "power_hp", nullable = false)
-    private int powerHp;
+  @Column(name = "power_hp", nullable = false)
+  private int powerHp;
 
-    @Column(name = "torque_nm", nullable = false)
-    private int torqueNm;
+  @Column(name = "torque_nm", nullable = false)
+  private int torqueNm;
 
-    @Column(name = "measured_at", nullable = false)
-    private LocalDate measuredAt;
+  @Column(name = "measured_at", nullable = false)
+  private LocalDate measuredAt;
 
-    @Column(columnDefinition = "text")
-    private String notes;
+  @Column(columnDefinition = "text")
+  private String notes;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private Instant createdAt;
 
-    @PrePersist
-    void onCreate() {
-        this.createdAt = Instant.now();
-    }
+  @PrePersist
+  void onCreate() {
+    this.createdAt = Instant.now();
+  }
 }

@@ -10,18 +10,18 @@ import type {
   VehicleRequest,
   VehicleResponse,
   VehicleSummaryResponse,
-} from './types';
+} from "./types";
 
 // Where the backend lives. In development this comes from .env.local.
 const BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080/api/v1';
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
 
 // One small helper that every call below uses. It does the fetch, throws a
 // normal Error if the response failed, and returns the parsed JSON.
 // The <T> is just "what kind of data this call gives back".
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(BASE + path, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { "Content-Type": "application/json" },
     ...options,
   });
 
@@ -41,7 +41,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 export function getVehicles() {
   // size=100 keeps it simple - we just load them all instead of paging.
-  return request<PageResponse<VehicleResponse>>('/vehicles?page=0&size=100');
+  return request<PageResponse<VehicleResponse>>("/vehicles?page=0&size=100");
 }
 
 export function getVehicle(id: string) {
@@ -49,38 +49,43 @@ export function getVehicle(id: string) {
 }
 
 export function createVehicle(data: VehicleRequest) {
-  return request<VehicleResponse>('/vehicles', {
-    method: 'POST',
+  return request<VehicleResponse>("/vehicles", {
+    method: "POST",
     body: JSON.stringify(data),
   });
 }
 
 export function updateVehicle(id: string, data: VehicleRequest) {
   return request<VehicleResponse>(`/vehicles/${id}`, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(data),
   });
 }
 
 export function deleteVehicle(id: string) {
-  return request<void>(`/vehicles/${id}`, { method: 'DELETE' });
+  return request<void>(`/vehicles/${id}`, { method: "DELETE" });
 }
 
 // ---- Modifications ----
 
 export function getModifications(vehicleId: string) {
-  return request<ModificationResponse[]>(`/vehicles/${vehicleId}/modifications`);
+  return request<ModificationResponse[]>(
+    `/vehicles/${vehicleId}/modifications`,
+  );
 }
 
-export function createModification(vehicleId: string, data: ModificationRequest) {
+export function createModification(
+  vehicleId: string,
+  data: ModificationRequest,
+) {
   return request<ModificationResponse>(`/vehicles/${vehicleId}/modifications`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(data),
   });
 }
 
 export function deleteModification(id: string) {
-  return request<void>(`/modifications/${id}`, { method: 'DELETE' });
+  return request<void>(`/modifications/${id}`, { method: "DELETE" });
 }
 
 // ---- Dyno results ----
@@ -91,7 +96,7 @@ export function getDynoResults(vehicleId: string) {
 
 export function createDynoResult(vehicleId: string, data: DynoRequest) {
   return request<DynoResponse>(`/vehicles/${vehicleId}/dyno`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(data),
   });
 }

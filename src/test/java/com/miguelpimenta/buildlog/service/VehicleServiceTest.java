@@ -24,70 +24,72 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class VehicleServiceTest {
 
-    @Mock
-    VehicleRepository vehicleRepository;
+  @Mock VehicleRepository vehicleRepository;
 
-    VehicleService vehicleService;
+  VehicleService vehicleService;
 
-    @BeforeEach
-    void setUp() {
-        // Real mapper, mocked repository - we want to verify the mapping too.
-        vehicleService = new VehicleService(vehicleRepository, new VehicleMapper());
-    }
+  @BeforeEach
+  void setUp() {
+    // Real mapper, mocked repository - we want to verify the mapping too.
+    vehicleService = new VehicleService(vehicleRepository, new VehicleMapper());
+  }
 
-    @Test
-    void createMapsAndPersists() {
-        when(vehicleRepository.save(any(Vehicle.class))).thenAnswer(invocation -> {
-            Vehicle v = invocation.getArgument(0);
-            v.setId(UUID.randomUUID());
-            return v;
-        });
+  @Test
+  void createMapsAndPersists() {
+    when(vehicleRepository.save(any(Vehicle.class)))
+        .thenAnswer(
+            invocation -> {
+              Vehicle v = invocation.getArgument(0);
+              v.setId(UUID.randomUUID());
+              return v;
+            });
 
-        VehicleRequest request = new VehicleRequest("Volkswagen", "Golf", 2015, "EA288", "daily driver");
-        VehicleResponse response = vehicleService.create(request);
+    VehicleRequest request =
+        new VehicleRequest("Volkswagen", "Golf", 2015, "EA288", "daily driver");
+    VehicleResponse response = vehicleService.create(request);
 
-        assertThat(response.id()).isNotNull();
-        assertThat(response.make()).isEqualTo("Volkswagen");
-        assertThat(response.engineCode()).isEqualTo("EA288");
-    }
+    assertThat(response.id()).isNotNull();
+    assertThat(response.make()).isEqualTo("Volkswagen");
+    assertThat(response.engineCode()).isEqualTo("EA288");
+  }
 
-    @Test
-    void getThrowsNotFoundWhenMissing() {
-        UUID id = UUID.randomUUID();
-        when(vehicleRepository.findById(id)).thenReturn(Optional.empty());
+  @Test
+  void getThrowsNotFoundWhenMissing() {
+    UUID id = UUID.randomUUID();
+    when(vehicleRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> vehicleService.get(id))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining(id.toString());
-    }
+    assertThatThrownBy(() -> vehicleService.get(id))
+        .isInstanceOf(ResourceNotFoundException.class)
+        .hasMessageContaining(id.toString());
+  }
 
-    @Test
-    void deleteThrowsNotFoundAndDoesNotDeleteWhenMissing() {
-        UUID id = UUID.randomUUID();
-        when(vehicleRepository.existsById(id)).thenReturn(false);
+  @Test
+  void deleteThrowsNotFoundAndDoesNotDeleteWhenMissing() {
+    UUID id = UUID.randomUUID();
+    when(vehicleRepository.existsById(id)).thenReturn(false);
 
-        assertThatThrownBy(() -> vehicleService.delete(id))
-                .isInstanceOf(ResourceNotFoundException.class);
-        verify(vehicleRepository, never()).deleteById(id);
-    }
+    assertThatThrownBy(() -> vehicleService.delete(id))
+        .isInstanceOf(ResourceNotFoundException.class);
+    verify(vehicleRepository, never()).deleteById(id);
+  }
 
-    @Test
-    void updateAppliesChangesWhenPresent() {
-        UUID id = UUID.randomUUID();
-        Vehicle existing = new Vehicle();
-        existing.setId(id);
-        existing.setMake("VW");
-        existing.setModel("Golf");
-        existing.setYear(2010);
-        existing.setEngineCode("CBFA");
-        when(vehicleRepository.findById(id)).thenReturn(Optional.of(existing));
+  @Test
+  void updateAppliesChangesWhenPresent() {
+    UUID id = UUID.randomUUID();
+    Vehicle existing = new Vehicle();
+    existing.setId(id);
+    existing.setMake("VW");
+    existing.setModel("Golf");
+    existing.setYear(2010);
+    existing.setEngineCode("CBFA");
+    when(vehicleRepository.findById(id)).thenReturn(Optional.of(existing));
 
-        VehicleRequest request = new VehicleRequest("Volkswagen", "Golf R", 2018, "EA888", null);
-        VehicleResponse response = vehicleService.update(id, request);
+    VehicleRequest request = new VehicleRequest("Volkswagen", "Golf R", 2018, "EA888", null);
+    VehicleResponse response = vehicleService.update(id, request);
 
-        assertThat(response.make()).isEqualTo("Volkswagen");
-        assertThat(response.model()).isEqualTo("Golf R");
-        assertThat(response.year()).isEqualTo(2018);
-        assertThat(response.engineCode()).isEqualTo("EA888");
-    }
+    assertThat(response.make()).isEqualTo("Volkswagen");
+    assertThat(response.model()).isEqualTo("Golf R");
+    assertThat(response.year()).isEqualTo(2018);
+    assertThat(response.engineCode()).isEqualTo("EA888");
+  }
 }

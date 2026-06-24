@@ -24,40 +24,41 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping("/api/v1/vehicles")
 public class VehicleController {
 
-    private final VehicleService vehicleService;
+  private final VehicleService vehicleService;
 
-    public VehicleController(VehicleService vehicleService) {
-        this.vehicleService = vehicleService;
-    }
+  public VehicleController(VehicleService vehicleService) {
+    this.vehicleService = vehicleService;
+  }
 
-    @PostMapping
-    public ResponseEntity<VehicleResponse> create(@Valid @RequestBody VehicleRequest request) {
-        VehicleResponse created = vehicleService.create(request);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(created.id())
-                .toUri();
-        return ResponseEntity.created(location).body(created);
-    }
+  @PostMapping
+  public ResponseEntity<VehicleResponse> create(@Valid @RequestBody VehicleRequest request) {
+    VehicleResponse created = vehicleService.create(request);
+    URI location =
+        ServletUriComponentsBuilder.fromCurrentRequest()
+            .path("/{id}")
+            .buildAndExpand(created.id())
+            .toUri();
+    return ResponseEntity.created(location).body(created);
+  }
 
-    @GetMapping
-    public PageResponse<VehicleResponse> list(@PageableDefault(size = 20) Pageable pageable) {
-        return PageResponse.from(vehicleService.list(pageable));
-    }
+  @GetMapping
+  public PageResponse<VehicleResponse> list(@PageableDefault(size = 20) Pageable pageable) {
+    return PageResponse.from(vehicleService.list(pageable));
+  }
 
-    @GetMapping("/{id}")
-    public VehicleResponse get(@PathVariable UUID id) {
-        return vehicleService.get(id);
-    }
+  @GetMapping("/{id}")
+  public VehicleResponse get(@PathVariable UUID id) {
+    return vehicleService.get(id);
+  }
 
-    @PutMapping("/{id}")
-    public VehicleResponse update(@PathVariable UUID id, @Valid @RequestBody VehicleRequest request) {
-        return vehicleService.update(id, request);
-    }
+  @PutMapping("/{id}")
+  public VehicleResponse update(@PathVariable UUID id, @Valid @RequestBody VehicleRequest request) {
+    return vehicleService.update(id, request);
+  }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        vehicleService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    vehicleService.delete(id);
+    return ResponseEntity.noContent().build();
+  }
 }

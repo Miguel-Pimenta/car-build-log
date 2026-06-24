@@ -21,8 +21,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A single modification made to a {@link Vehicle} - e.g. "Stage 1 remap".
- * Many modifications belong to one vehicle.
+ * A single modification made to a {@link Vehicle} - e.g. "Stage 1 remap". Many modifications belong
+ * to one vehicle.
  */
 @Entity
 @Table(name = "modifications")
@@ -31,38 +31,38 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Modification {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "vehicle_id", nullable = false)
+  private Vehicle vehicle;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 32)
-    private ModificationCategory category;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 32)
+  private ModificationCategory category;
 
-    @Column(nullable = false)
-    private String name;
+  @Column(nullable = false)
+  private String name;
 
-    @Column(name = "part_number")
-    private String partNumber;
+  @Column(name = "part_number")
+  private String partNumber;
 
-    @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal cost;
+  @Column(nullable = false, precision = 12, scale = 2)
+  private BigDecimal cost;
 
-    @Column(name = "installed_at", nullable = false)
-    private LocalDate installedAt;
+  @Column(name = "installed_at", nullable = false)
+  private LocalDate installedAt;
 
-    @Column(name = "mileage_km_at_install", nullable = false)
-    private int mileageKmAtInstall;
+  @Column(name = "mileage_km_at_install", nullable = false)
+  private int mileageKmAtInstall;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private Instant createdAt;
 
-    @PrePersist
-    void onCreate() {
-        this.createdAt = Instant.now();
-    }
+  @PrePersist
+  void onCreate() {
+    this.createdAt = Instant.now();
+  }
 }
