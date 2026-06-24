@@ -1,0 +1,20 @@
+# Local development profile (run with: SPRING_PROFILES_ACTIVE=local).
+# In-memory H2 so the app runs with no database to install. The schema is
+# created fresh on every start and all data is lost on shutdown. Everything
+# else (JPA, actuator, port 8080) is inherited from application.yml - only the
+# datasource is swapped out here. PostgreSQL compatibility mode keeps H2's SQL
+# behaviour close to the real database.
+spring:
+  datasource:
+    url: jdbc:h2:mem:buildlog;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  # Browse the in-memory data at http://localhost:8080/h2-console
+  # (JDBC URL: jdbc:h2:mem:buildlog   user: sa   password: empty)
+  h2:
+    console:
+      enabled: true
