@@ -13,10 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * A project car being tracked in the build log. Parent of its modifications
- * and dyno results.
- */
+/** A project car being tracked in the build log. Parent of its modifications and dyno results. */
 @Entity
 @Table(name = "vehicles")
 @Getter
@@ -24,30 +21,30 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Vehicle {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @Column(nullable = false)
-    private String make;
+  @Column(nullable = false)
+  private String make;
 
-    @Column(nullable = false)
-    private String model;
+  @Column(nullable = false)
+  private String model;
 
-    @Column(name = "model_year", nullable = false)
-    private int year;
+  @Column(name = "model_year", nullable = false)
+  private int year;
 
-    @Column(name = "engine_code", nullable = false)
-    private String engineCode;
+  @Column(name = "engine_code", nullable = false)
+  private String engineCode;
 
-    @Column(columnDefinition = "text")
-    private String notes;
+  @Column(columnDefinition = "text")
+  private String notes;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private Instant createdAt;
 
-    @PrePersist
-    void onCreate() {
-        this.createdAt = Instant.now();
-    }
+  @PrePersist
+  void onCreate() {
+    this.createdAt = Instant.now();
+  }
 }

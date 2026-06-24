@@ -1,15 +1,19 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import './globals.css';
+import type { Metadata } from "next";
+import Link from "next/link";
+import "./globals.css";
 
 // `metadata` sets the browser tab title. Only layouts/pages can export this.
 export const metadata: Metadata = {
-  title: 'Car Build Log',
-  description: 'Track your vehicles, modifications, and dyno results.',
+  title: "Car Build Log",
+  description: "Track your vehicles, modifications, and dyno results.",
 };
 
 // The layout wraps every page. `children` is whichever page is currently shown.
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>

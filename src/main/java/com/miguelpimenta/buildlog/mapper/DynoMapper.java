@@ -10,25 +10,24 @@ import org.springframework.stereotype.Component;
 @Component
 public class DynoMapper {
 
-    public DynoResult toEntity(DynoRequest request, Vehicle vehicle) {
-        DynoResult result = new DynoResult();
-        result.setVehicle(vehicle);
-        result.setPowerHp(request.powerHp());
-        result.setTorqueNm(request.torqueNm());
-        result.setMeasuredAt(request.measuredAt());
-        result.setNotes(request.notes());
-        return result;
-    }
+  public DynoResult toEntity(DynoRequest request, Vehicle vehicle) {
+    DynoResult result = new DynoResult();
+    result.setVehicle(vehicle);
+    result.setPowerHp(request.powerHp());
+    result.setTorqueNm(request.torqueNm());
+    result.setMeasuredAt(request.measuredAt());
+    result.setNotes(request.notes());
+    return result;
+  }
 
-    public DynoResponse toResponse(DynoResult result) {
-        return new DynoResponse(
-                result.getId(),
-                result.getVehicle().getId(),
-                result.getPowerHp(),
-                result.getTorqueNm(),
-                result.getMeasuredAt(),
-                result.getNotes(),
-                result.getCreatedAt()
-        );
-    }
+  public DynoResponse toResponse(DynoResult result) {
+    return new DynoResponse(
+        result.getId(),
+        result.getVehicle().getId(),
+        result.getPowerHp(),
+        result.getTorqueNm(),
+        result.getMeasuredAt(),
+        result.getNotes(),
+        result.getCreatedAt());
+  }
 }

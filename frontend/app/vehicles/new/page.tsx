@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import VehicleForm from '@/components/VehicleForm';
-import { createVehicle } from '@/lib/api';
-import type { VehicleRequest } from '@/lib/types';
+import { useRouter } from "next/navigation";
+import VehicleForm from "@/components/VehicleForm";
+import { createVehicle } from "@/lib/api";
+import type { VehicleRequest } from "@/lib/types";
 
 export default function NewVehiclePage() {
   const router = useRouter(); // lets us send the user to another page after saving

@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/vehicles/{id}/summary")
 public class VehicleSummaryController {
 
-    private final VehicleSummaryService summaryService;
+  private final VehicleSummaryService summaryService;
 
-    public VehicleSummaryController(VehicleSummaryService summaryService) {
-        this.summaryService = summaryService;
-    }
+  public VehicleSummaryController(VehicleSummaryService summaryService) {
+    this.summaryService = summaryService;
+  }
 
-    @GetMapping
-    public VehicleSummaryResponse summary(@PathVariable UUID id) {
-        return summaryService.summarise(id);
-    }
+  @GetMapping
+  public VehicleSummaryResponse summary(@PathVariable UUID id) {
+    return summaryService.summarise(id);
+  }
 }

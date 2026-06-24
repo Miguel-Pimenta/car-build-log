@@ -12,27 +12,9 @@ import java.time.LocalDate;
 
 /** Inbound payload for adding a modification to a vehicle. */
 public record ModificationRequest(
-
-        @NotNull
-        ModificationCategory category,
-
-        @NotBlank
-        @Size(max = 200)
-        String name,
-
-        @Size(max = 100)
-        String partNumber,
-
-        @NotNull
-        @PositiveOrZero
-        @Digits(integer = 10, fraction = 2)
-        BigDecimal cost,
-
-        @NotNull
-        @PastOrPresent
-        LocalDate installedAt,
-
-        @PositiveOrZero
-        int mileageKmAtInstall
-) {
-}
+    @NotNull ModificationCategory category,
+    @NotBlank @Size(max = 200) String name,
+    @Size(max = 100) String partNumber,
+    @NotNull @PositiveOrZero @Digits(integer = 10, fraction = 2) BigDecimal cost,
+    @NotNull @PastOrPresent LocalDate installedAt,
+    @PositiveOrZero int mileageKmAtInstall) {}

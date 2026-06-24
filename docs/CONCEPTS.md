@@ -72,12 +72,12 @@ Spring sees the constructor needs a `VehicleService`, finds that bean, and passe
 
 **Why constructor injection instead of `@Autowired` on a field?**
 
-| Constructor injection (used here) | Field injection (`@Autowired` on a field) |
-|---|---|
-| Dependencies can be `final` (immutable) | Cannot be `final` |
-| Object is always fully built & valid | Can exist half-initialised |
-| Trivial to unit test with plain `new` | Needs reflection / a container to set fields |
-| A huge constructor warns you the class does too much | Hides that smell |
+| Constructor injection (used here)                    | Field injection (`@Autowired` on a field)    |
+| ---------------------------------------------------- | -------------------------------------------- |
+| Dependencies can be `final` (immutable)              | Cannot be `final`                            |
+| Object is always fully built & valid                 | Can exist half-initialised                   |
+| Trivial to unit test with plain `new`                | Needs reflection / a container to set fields |
+| A huge constructor warns you the class does too much | Hides that smell                             |
 
 You can see the testability payoff in `service/...Test` files, e.g.
 `new VehicleService(mockRepository, new VehicleMapper())` — no Spring needed.
@@ -86,12 +86,13 @@ You can see the testability payoff in `service/...Test` files, e.g.
 
 ## 3. DTOs and mappers
 
-- **Entity (model)** = the *database* shape. Lives in `model/`, annotated with `@Entity`.
-- **DTO** = the *API* shape — what the client sends (`*Request`) and receives (`*Response`).
+- **Entity (model)** = the _database_ shape. Lives in `model/`, annotated with `@Entity`.
+- **DTO** = the _API_ shape — what the client sends (`*Request`) and receives (`*Response`).
   Lives in `dto/`, written as Java `record`s.
 
 **Why not just send the entity over the wire?** Because the database shape and the API contract
 should be free to change independently. DTOs let you:
+
 - hide internal fields (we expose `vehicleId`, not the whole nested `Vehicle`),
 - put request **validation** (`@NotBlank`, `@Min`, …) on the DTO instead of the entity,
 - evolve the DB without breaking clients (and vice-versa).
@@ -113,7 +114,7 @@ Full round trip:
 
 ## 4. Optional
 
-`Optional<T>` is Java's way of saying *"this might be empty — you must handle that."* It replaces
+`Optional<T>` is Java's way of saying _"this might be empty — you must handle that."_ It replaces
 returning `null` and hoping the caller remembers to check (the usual cause of
 `NullPointerException`).
 
@@ -144,6 +145,7 @@ return vehicleRepository.findById(id)
 ## 5. @Transactional and readOnly
 
 ### Transactions
+
 A database **transaction** is an all-or-nothing unit of work: everything inside it **commits**
 together, or **rolls back** together if something fails. `@Transactional` tells Spring to wrap a
 method in one — it opens a transaction before the method, then:
@@ -154,12 +156,14 @@ method in one — it opens a transaction before the method, then:
 Spring does this with a proxy around the bean, so you never write begin/commit/rollback yourself.
 
 ### readOnly = true
-A flag meaning *"this method only reads, never writes."* It's an optimisation + a statement of intent:
+
+A flag meaning _"this method only reads, never writes."_ It's an optimisation + a statement of intent:
 
 - **skips dirty checking** (see §6) — no snapshots, no flush → less memory/CPU on read paths,
 - signals the DB/driver it's read-only, which in larger setups lets queries hit a **read replica**.
 
 ### The class-default + method-override pattern
+
 Look at any service (e.g. `service/DynoService.java`):
 
 ```java
@@ -182,36 +186,38 @@ the class default; the write methods (`create`, `update`, `delete`, `addToVehicl
 > `@Transactional(readOnly = true)` with `@Transactional` on the write methods).
 
 ### Why annotate the class instead of just the methods that write?
-You *can* put `@Transactional` only on the write methods and leave reads bare — it works, and it's a
+
+You _can_ put `@Transactional` only on the write methods and leave reads bare — it works, and it's a
 common style. But first, two clarifications:
 
 - `@Transactional` on the class is **not** one shared transaction. Each method call still gets its
   **own** transaction; the class annotation just sets the **default settings** for every method.
-- The real choice isn't *transaction vs. no transaction* — reads benefit from a (read-only)
-  transaction too. It's *read-only vs. read-write*.
+- The real choice isn't _transaction vs. no transaction_ — reads benefit from a (read-only)
+  transaction too. It's _read-only vs. read-write_.
 
 What reads lose if you leave them un-annotated:
 
-| | Reads un-annotated | Class default `readOnly = true` |
-|---|---|---|
-| A read doing **two** repo calls (e.g. `listForVehicle`) | two separate transactions | one consistent transaction |
-| `readOnly` optimisation (skip dirty checking) | no | yes |
-| Persistence context open for the whole method (lazy loading safe) | no → risk of `LazyInitializationException` | yes |
-| Can you *forget* to protect a method? | yes (a forgotten write is a bug) | no — the safe default is automatic |
+|                                                                   | Reads un-annotated                         | Class default `readOnly = true`    |
+| ----------------------------------------------------------------- | ------------------------------------------ | ---------------------------------- |
+| A read doing **two** repo calls (e.g. `listForVehicle`)           | two separate transactions                  | one consistent transaction         |
+| `readOnly` optimisation (skip dirty checking)                     | no                                         | yes                                |
+| Persistence context open for the whole method (lazy loading safe) | no → risk of `LazyInitializationException` | yes                                |
+| Can you _forget_ to protect a method?                             | yes (a forgotten write is a bug)           | no — the safe default is automatic |
 
 So the convention flips responsibility to the safe side: make the cheap, safe thing (a read-only
 transaction) the **automatic default**, then explicitly mark the few **write** methods — the
-dangerous case you *want* to be deliberate about. And `readOnly = true` isn't a cost; it makes reads
-*cheaper*, so there's no downside to "applying it to all."
+dangerous case you _want_ to be deliberate about. And `readOnly = true` isn't a cost; it makes reads
+_cheaper_, so there's no downside to "applying it to all."
 
 **Rule of thumb:** `@Transactional(readOnly = true)` on the class, plain `@Transactional` on each
 method that writes.
 
 ### Two gotchas
+
 1. **Rollback is automatic only for unchecked exceptions** (`RuntimeException`/`Error`); checked
    exceptions commit unless you set `rollbackFor`.
 2. **Self-invocation bypasses it** — because it's proxy-based, one method calling another
-   `@Transactional` method on `this` skips the transaction logic. The call must come from *outside*
+   `@Transactional` method on `this` skips the transaction logic. The call must come from _outside_
    the bean (controllers calling services cross the proxy correctly).
 
 ---
@@ -219,6 +225,7 @@ method that writes.
 ## 6. The persistence context
 
 ### Saving without calling save()
+
 This surprises everyone at first. In `service/VehicleService.java`:
 
 ```java
@@ -246,14 +253,15 @@ snapshot and, for anything changed, generates the `UPDATE` (this is the "flush")
 4. commit → flush → Hibernate sees `make` changed → `UPDATE vehicles SET ... WHERE id = ?`.
 
 ### What "dirty checking" actually does (the snapshot)
-"Dirty" just means *changed* — an entity is dirty when its in-memory values no longer match the
+
+"Dirty" just means _changed_ — an entity is dirty when its in-memory values no longer match the
 database. Dirty checking is a **before-and-after comparison**:
 
 1. **At load**, Hibernate stores a hidden **snapshot** of the entity's field values as they came from
    the DB (it keeps both the live object and the frozen snapshot).
 2. **You mutate** the object with setters — only the object changes; the snapshot stays frozen.
 3. **At flush** (on commit), Hibernate compares current values to the snapshot, field by field.
-   Different → the entity is *dirty* → it generates an `UPDATE`. Unchanged → no SQL.
+   Different → the entity is _dirty_ → it generates an `UPDATE`. Unchanged → no SQL.
 
 With values:
 
@@ -269,13 +277,14 @@ vehicle.setMake("Volkswagen")                              // object:   make="Vo
 
 Analogy: a text editor remembers a file's original contents when you open it; on **Save** it diffs
 the current text against that original and writes because something changed — you never told it
-*what* changed. Hibernate diffs entity objects the same way at commit.
+_what_ changed. Hibernate diffs entity objects the same way at commit.
 
-> By default the `UPDATE` writes *all* of the row's mapped columns (Hibernate just knows the row is
+> By default the `UPDATE` writes _all_ of the row's mapped columns (Hibernate just knows the row is
 > dirty). Annotating an entity with `@DynamicUpdate` makes it write only the changed columns — rarely
 > needed, but good to know it exists.
 
 ### So when DO you need save()?
+
 Compare with `service/ModificationService.java#addToVehicle`:
 
 ```java
@@ -285,14 +294,15 @@ Modification saved = modificationRepository.save(modificationMapper.toEntity(req
 Here `toEntity(...)` does `new Modification()` — a **brand-new** object Hibernate has never seen.
 It isn't tracked, so dirty checking can't help it; you call `save()` to introduce it (→ `INSERT`).
 
-| Where did the entity come from? | State | Call `save()`? |
-|---|---|---|
-| `new Modification()` (you created it) | new / untracked | **Yes** → `INSERT` |
+| Where did the entity come from?              | State             | Call `save()`?                               |
+| -------------------------------------------- | ----------------- | -------------------------------------------- |
+| `new Modification()` (you created it)        | new / untracked   | **Yes** → `INSERT`                           |
 | `findById(...)` (loaded in this transaction) | managed / tracked | **No** → just mutate it → `UPDATE` on commit |
 
 **Rule of thumb: new object → `save()`; loaded object → just change it.**
 
 ### Why it only works inside the transaction
+
 Dirty checking works only while the entity is **managed** — i.e. while the persistence context is
 open, which is exactly the span of the `@Transactional` method. After commit the context closes and
 the entity becomes **detached**; setters on it then do nothing to the DB. (It's also why reads use
@@ -305,14 +315,14 @@ you with an `UPDATE`.)
 
 Every JPA entity is in one of four states:
 
-| State | Meaning | How you get there |
-|-------|---------|-------------------|
-| **Transient / new** | Plain object, no DB identity, untracked | `new Vehicle()` |
+| State                    | Meaning                                                | How you get there                              |
+| ------------------------ | ------------------------------------------------------ | ---------------------------------------------- |
+| **Transient / new**      | Plain object, no DB identity, untracked                | `new Vehicle()`                                |
 | **Managed / persistent** | Tracked by the persistence context; changes auto-flush | `findById(...)` inside a tx, or after `save()` |
-| **Detached** | Was managed, but the context closed; no longer tracked | transaction ended |
-| **Removed** | Marked for deletion | `delete(...)` |
+| **Detached**             | Was managed, but the context closed; no longer tracked | transaction ended                              |
+| **Removed**              | Marked for deletion                                    | `delete(...)`                                  |
 
-`save()`/`persist()` moves *transient → managed*. `merge()` re-attaches a *detached* object.
+`save()`/`persist()` moves _transient → managed_. `merge()` re-attaches a _detached_ object.
 
 ---
 
@@ -334,7 +344,7 @@ public class GlobalExceptionHandler {
 }
 ```
 
-Any exception thrown by *any* controller bubbles up to the matching `@ExceptionHandler`, which
+Any exception thrown by _any_ controller bubbles up to the matching `@ExceptionHandler`, which
 turns it into the consistent JSON shape defined by `ErrorResponse`
 (`{ timestamp, status, error, message }`). This is a **cross-cutting concern** handled in one place
 — the services just throw `ResourceNotFoundException` and trust the advice to format the response.

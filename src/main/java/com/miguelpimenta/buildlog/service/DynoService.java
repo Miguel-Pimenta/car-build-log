@@ -15,25 +15,30 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class DynoService {
 
-    private final DynoResultRepository dynoResultRepository;
-    private final VehicleService vehicleService;
-    private final DynoMapper dynoMapper;
+  private final DynoResultRepository dynoResultRepository;
+  private final VehicleService vehicleService;
+  private final DynoMapper dynoMapper;
 
-    public DynoService(DynoResultRepository dynoResultRepository, VehicleService vehicleService, DynoMapper dynoMapper) {
-        this.dynoResultRepository = dynoResultRepository;
-        this.vehicleService = vehicleService;
-        this.dynoMapper = dynoMapper;
-    }
+  public DynoService(
+      DynoResultRepository dynoResultRepository,
+      VehicleService vehicleService,
+      DynoMapper dynoMapper) {
+    this.dynoResultRepository = dynoResultRepository;
+    this.vehicleService = vehicleService;
+    this.dynoMapper = dynoMapper;
+  }
 
-    @Transactional
-    public DynoResponse addToVehicle(UUID vehicleId, DynoRequest request) {
-        Vehicle vehicle = vehicleService.getEntity(vehicleId);
-        DynoResult saved = dynoResultRepository.save(dynoMapper.toEntity(request, vehicle));
-        return dynoMapper.toResponse(saved);
-    }
+  @Transactional
+  public DynoResponse addToVehicle(UUID vehicleId, DynoRequest request) {
+    Vehicle vehicle = vehicleService.getEntity(vehicleId);
+    DynoResult saved = dynoResultRepository.save(dynoMapper.toEntity(request, vehicle));
+    return dynoMapper.toResponse(saved);
+  }
 
-    public List<DynoResponse> listForVehicle(UUID vehicleId) {
-        vehicleService.getEntity(vehicleId); // 404 if the vehicle does not exist
-        return dynoResultRepository.findByVehicleIdOrderByMeasuredAtDesc(vehicleId).stream().map(dynoMapper::toResponse).toList();
-    }
+  public List<DynoResponse> listForVehicle(UUID vehicleId) {
+    vehicleService.getEntity(vehicleId); // 404 if the vehicle does not exist
+    return dynoResultRepository.findByVehicleIdOrderByMeasuredAtDesc(vehicleId).stream()
+        .map(dynoMapper::toResponse)
+        .toList();
+  }
 }

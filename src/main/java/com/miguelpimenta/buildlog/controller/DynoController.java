@@ -18,21 +18,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/vehicles/{vehicleId}/dyno")
 public class DynoController {
 
-    private final DynoService dynoService;
+  private final DynoService dynoService;
 
-    public DynoController(DynoService dynoService) {
-        this.dynoService = dynoService;
-    }
+  public DynoController(DynoService dynoService) {
+    this.dynoService = dynoService;
+  }
 
-    // No single-result GET is exposed, so we return 201 + body without a Location header.
-    @PostMapping
-    public ResponseEntity<DynoResponse> add(@PathVariable UUID vehicleId, @Valid @RequestBody DynoRequest request) {
-        DynoResponse created = dynoService.addToVehicle(vehicleId, request);
-        return ResponseEntity.status(201).body(created);
-    }
+  // No single-result GET is exposed, so we return 201 + body without a Location header.
+  @PostMapping
+  public ResponseEntity<DynoResponse> add(
+      @PathVariable UUID vehicleId, @Valid @RequestBody DynoRequest request) {
+    DynoResponse created = dynoService.addToVehicle(vehicleId, request);
+    return ResponseEntity.status(201).body(created);
+  }
 
-    @GetMapping
-    public List<DynoResponse> list(@PathVariable UUID vehicleId) {
-        return dynoService.listForVehicle(vehicleId);
-    }
+  @GetMapping
+  public List<DynoResponse> list(@PathVariable UUID vehicleId) {
+    return dynoService.listForVehicle(vehicleId);
+  }
 }

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import type { VehicleRequest } from '@/lib/types';
+import { useState } from "react";
+import type { VehicleRequest } from "@/lib/types";
 
 // A reusable form for BOTH creating and editing a vehicle.
 // It receives three props from its parent:
@@ -18,18 +18,18 @@ export default function VehicleForm({
   submitLabel: string;
 }) {
   // "Controlled inputs": each field's value lives in state, and the input shows it.
-  const [make, setMake] = useState(initialValue?.make ?? '');
-  const [model, setModel] = useState(initialValue?.model ?? '');
-  const [year, setYear] = useState(initialValue?.year?.toString() ?? '');
-  const [engineCode, setEngineCode] = useState(initialValue?.engineCode ?? '');
-  const [notes, setNotes] = useState(initialValue?.notes ?? '');
-  const [error, setError] = useState('');
+  const [make, setMake] = useState(initialValue?.make ?? "");
+  const [model, setModel] = useState(initialValue?.model ?? "");
+  const [year, setYear] = useState(initialValue?.year?.toString() ?? "");
+  const [engineCode, setEngineCode] = useState(initialValue?.engineCode ?? "");
+  const [notes, setNotes] = useState(initialValue?.notes ?? "");
+  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault(); // stop the browser reloading the page on submit
     setSaving(true);
-    setError('');
+    setError("");
     try {
       await onSubmit({
         make,
@@ -40,13 +40,16 @@ export default function VehicleForm({
       });
       // On success the parent navigates away, so there's nothing else to do here.
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : "Something went wrong");
       setSaving(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 bg-white border rounded p-4">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-3 bg-white border rounded p-4"
+    >
       {error && <p className="text-red-600">{error}</p>}
       <Field label="Make" value={make} onChange={setMake} />
       <Field label="Model" value={model} onChange={setModel} />
@@ -58,7 +61,7 @@ export default function VehicleForm({
         disabled={saving}
         className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
       >
-        {saving ? 'Saving…' : submitLabel}
+        {saving ? "Saving…" : submitLabel}
       </button>
     </form>
   );
@@ -70,7 +73,7 @@ function Field({
   label,
   value,
   onChange,
-  type = 'text',
+  type = "text",
 }: {
   label: string;
   value: string;

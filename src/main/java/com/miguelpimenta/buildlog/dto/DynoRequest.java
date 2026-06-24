@@ -8,18 +8,7 @@ import java.time.LocalDate;
 
 /** Inbound payload for recording a dyno result. */
 public record DynoRequest(
-
-        @Positive
-        int powerHp,
-
-        @Positive
-        int torqueNm,
-
-        @NotNull
-        @PastOrPresent
-        LocalDate measuredAt,
-
-        @Size(max = 2000)
-        String notes
-) {
-}
+    @Positive int powerHp,
+    @Positive int torqueNm,
+    @NotNull @PastOrPresent LocalDate measuredAt,
+    @Size(max = 2000) String notes) {}
