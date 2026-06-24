@@ -30,7 +30,13 @@ public class VehicleService {
     return vehicleMapper.toResponse(saved);
   }
 
-  public Page<VehicleResponse> list(Pageable pageable) {
+  public Page<VehicleResponse> list(String search, Pageable pageable) {
+    if (search != null && !search.isBlank()) {
+      String term = search.trim();
+      return vehicleRepository
+          .findByMakeContainingIgnoreCaseOrModelContainingIgnoreCase(term, term, pageable)
+          .map(vehicleMapper::toResponse);
+    }
     return vehicleRepository.findAll(pageable).map(vehicleMapper::toResponse);
   }
 
