@@ -1,7 +1,14 @@
 "use client";
 
-import { VEHICLE_STATUSES, VehicleRequest, VehicleStatus } from "@/lib/types";
 import { useState } from "react";
+import { VEHICLE_STATUSES, VehicleRequest, VehicleStatus } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // A reusable form for BOTH creating and editing a vehicle.
 // It receives three props from its parent:
@@ -61,22 +68,32 @@ export default function VehicleForm({
       <Field label="Year" type="number" value={year} onChange={setYear} />
       <Field label="Engine code" value={engineCode} onChange={setEngineCode} />
 
-      {/* A controlled <select> - same pattern as the category dropdown on the
-          detail page. `value` shows the current status; onChange updates it. */}
-      <label className="block">
-        <span className="block text-sm font-medium mb-1">Status</span>
-        <select
-          value={status}
-          onChange={(event) => setStatus(event.target.value as VehicleStatus)}
-          className="w-full border rounded px-3 py-2"
+      {/* shadcn Select replaces the native <select>.
+          The Radix Select is a *controlled* component:
+            - `value`         → the currently selected option (from state)
+            - `onValueChange` → called with the new value when user picks one
+          This is slightly different from a native <select onChange={e => ...}>
+          because Radix passes the value string directly (no event object). */}
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor="status-select"
+          className="text-sm font-medium"
         >
-          {VEHICLE_STATUSES.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </label>
+          Status
+        </label>
+        <Select value={status} onValueChange={(v) => setStatus(v as VehicleStatus)}>
+          <SelectTrigger id="status-select" className="w-full">
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            {VEHICLE_STATUSES.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <Field label="Notes" value={notes} onChange={setNotes} />
       <button
