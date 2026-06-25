@@ -1,6 +1,3 @@
-// All the calls to the backend live here, so the components don't have to
-// repeat the fetch details.
-
 import type {
   DynoRequest,
   DynoResponse,
@@ -12,13 +9,9 @@ import type {
   VehicleSummaryResponse,
 } from "./types";
 
-// Where the backend lives. In development this comes from .env.local.
 const BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
 
-// One small helper that every call below uses. It does the fetch, throws a
-// normal Error if the response failed, and returns the parsed JSON.
-// The <T> is just "what kind of data this call gives back".
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(BASE + path, {
     headers: { "Content-Type": "application/json" },
@@ -26,12 +19,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    // The backend sends { "message": "..." } when something is wrong.
     const body = await response.json().catch(() => null);
     throw new Error(body?.message ?? `Request failed (${response.status})`);
   }
 
-  // DELETE requests come back empty (status 204), so there's nothing to parse.
   if (response.status === 204) return undefined as T;
 
   return response.json();
@@ -40,10 +31,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 // ---- Vehicles ----
 
 export function getVehicles(search?: string) {
-  // size=100 keeps it simple - we just load them all instead of paging.
   let path = "/vehicles?page=0&size=100";
   if (search && search.trim() !== "") {
-    // encodeURIComponent makes spaces/symbols safe inside a URL (e.g. "type r").
     path += `&search=${encodeURIComponent(search.trim())}`;
   }
   return request<PageResponse<VehicleResponse>>(path);

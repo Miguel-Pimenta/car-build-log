@@ -24,10 +24,6 @@ export default function VehicleDetailPage() {
   const id = params.id as string;
   const router = useRouter();
 
-  // Four separate useQuery hooks replace the single useEffect that loaded
-  // everything sequentially. Each query is cached independently, so when you
-  // add a modification only the modifications and summary queries refetch —
-  // not the vehicle header or dyno list.
   const { data: vehicle, isLoading: vehicleLoading, error: vehicleError } = useVehicle(id);
   const { data: summary } = useVehicleSummary(id);
   const { data: mods = [], isLoading: modsLoading } = useModifications(id);
@@ -38,18 +34,15 @@ export default function VehicleDetailPage() {
   async function handleDeleteVehicle() {
     if (!window.confirm("Delete this vehicle and everything in it?")) return;
     await deleteVehicle.mutateAsync(id);
-    // Navigate home after deletion. The hook already removes cached entries.
     router.push("/");
   }
 
-  // Show a loading state until at least the vehicle header is ready.
   if (vehicleLoading) return <p>Loading…</p>;
   if (vehicleError) return <p className="text-red-600">{vehicleError.message}</p>;
   if (!vehicle) return null;
 
   return (
     <div className="space-y-8">
-      {/* ---- Vehicle header ---- */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -79,7 +72,6 @@ export default function VehicleDetailPage() {
         </div>
       </div>
 
-      {/* ---- Summary ---- */}
       {summary && (
         <section>
           <h2 className="text-lg font-semibold mb-2">Summary</h2>
@@ -106,7 +98,6 @@ export default function VehicleDetailPage() {
         </section>
       )}
 
-      {/* ---- Modifications ---- */}
       <section>
         <h2 className="text-lg font-semibold mb-2">
           Modifications ({modsLoading ? "…" : mods.length})
@@ -123,7 +114,6 @@ export default function VehicleDetailPage() {
         <AddModificationForm vehicleId={id} />
       </section>
 
-      {/* ---- Dyno results ---- */}
       <section>
         <h2 className="text-lg font-semibold mb-2">
           Dyno results ({dynosLoading ? "…" : dynos.length})
@@ -151,8 +141,6 @@ export default function VehicleDetailPage() {
   );
 }
 
-// ---- Small helpers used only on this page ----
-
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="bg-white border rounded p-3">
@@ -166,9 +154,6 @@ function formatMoney(value: number): string {
   return "€" + Number(value).toFixed(2);
 }
 
-// Extracted into its own component so it can call useDeleteModification
-// directly — hooks must be called at the top level of a component, not inside
-// a .map() callback.
 function ModificationRow({
   mod,
   vehicleId,
@@ -200,8 +185,6 @@ function ModificationRow({
   );
 }
 
-// Form to add a modification. State lives here; after a successful save
-// useMutation's onSuccess invalidates the cache — no manual reload() call needed.
 function AddModificationForm({ vehicleId }: { vehicleId: string }) {
   const [category, setCategory] = useState<ModificationCategory>("ENGINE");
   const [name, setName] = useState("");
@@ -209,7 +192,6 @@ function AddModificationForm({ vehicleId }: { vehicleId: string }) {
   const [installedAt, setInstalledAt] = useState("");
   const [mileage, setMileage] = useState("");
 
-  // useCreateModification invalidates modifications + summary on success.
   const createMod = useCreateModification(vehicleId);
 
   async function handleSubmit(event: React.FormEvent) {
@@ -221,7 +203,6 @@ function AddModificationForm({ vehicleId }: { vehicleId: string }) {
       installedAt,
       mileageKmAtInstall: Number(mileage),
     });
-    // Clear inputs after a successful add.
     setName("");
     setCost("");
     setInstalledAt("");
@@ -293,7 +274,6 @@ function AddDynoForm({ vehicleId }: { vehicleId: string }) {
   const [measuredAt, setMeasuredAt] = useState("");
   const [notes, setNotes] = useState("");
 
-  // useCreateDynoResult invalidates dyno list + summary on success.
   const createDyno = useCreateDynoResult(vehicleId);
 
   async function handleSubmit(event: React.FormEvent) {

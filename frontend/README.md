@@ -1,262 +1,398 @@
-# Car Build Log — Frontend (study guide)
+# Car Build Log — Frontend, explained from zero
 
-A walkthrough of **how this frontend works**, written to be read top-to-bottom. It explains the
-tech, the **order things run in**, and **what every file does**.
+This README is written for someone who **knows the backend but has never done React**. It teaches the
+concepts first, then shows exactly how this app uses them, file by file. Read it top to bottom.
+
+> **One-sentence summary:** this is a **Next.js** app (Next.js is a framework built on the **React**
+> UI library) that shows your cars in the browser and talks to the Spring Boot API over HTTP.
 
 ---
 
-## 1. The big picture
+# Part 1 — React from zero
 
-- **React** is a *library* for building UIs out of components. It does not decide routing, data
-  fetching, or build setup — you add those.
-- **Next.js** is the *framework* on top of React that makes those decisions: file-based routing,
-  server/client rendering, the build, etc.
-- **TypeScript** adds types so the editor catches mistakes before you run anything.
-- **Tailwind CSS** is how we style: small utility classes in `className` (`px-4`, `text-sm`) instead
-  of separate `.css` files.
-- **shadcn/ui** = pre-built, accessible components (`Badge`, `Button`, `Select`) **copied into our
-  repo** under `components/ui/` so we own and can edit them.
-- **TanStack Query** manages "server state" — fetching, caching, and refetching backend data — so we
-  don't hand-write `useState`/`useEffect`/`fetch` on every page.
+## 1.1 What React is
+React is a JavaScript library for building user interfaces out of **components**. A component is just
+a **function that returns the HTML-like markup to display**. You build a page by composing components.
 
-The frontend talks to the Spring Boot backend over HTTP (REST + JSON). It never touches the database
-directly.
-
-### The layered data flow (memorise this)
-
-```
- Page component (UI)            e.g. app/page.tsx
-        │ calls
-        ▼
- Custom hook (data access)      e.g. hooks/use-vehicles.ts  → useQuery / useMutation
-        │ calls
-        ▼
- API layer (raw fetch)          lib/api.ts  → request() → fetch()
-        │ HTTP
-        ▼
- Spring Boot backend            http://localhost:8080/api/v1
+```tsx
+function Hello() {
+  return <h1>Hello</h1>;   // looks like HTML, but it's inside JavaScript
+}
 ```
 
-**Each layer has one job.** A component decides *what to show*; a hook decides *how to get the data*;
-`lib/api.ts` knows *the URLs*. That separation is what keeps the code readable.
+## 1.2 JSX — HTML inside JavaScript
+That `<h1>Hello</h1>` is **JSX**. It's not a string and not real HTML — it's JavaScript that compiles
+to function calls. Rules that trip people up coming from plain HTML:
+- Attributes are camelCase: `className` (not `class`), `onClick` (not `onclick`).
+- You embed JavaScript with **curly braces**: `<p>{vehicle.make}</p>`.
+- A component must return **one** top-level element (wrap siblings in a `<div>` or `<>…</>`).
+
+## 1.3 Props — passing data *into* a component
+**Props** are the arguments you pass to a component, like function parameters. They flow **down** from
+parent to child.
+
+```tsx
+function Badge({ status }) {       // `status` is a prop
+  return <span>{status}</span>;
+}
+// used as:  <Badge status="SOLD" />
+```
+In this project, `StatusBadge` takes a `status` prop; `VehicleForm` takes `initialValue`, `onSubmit`,
+and `submitLabel` props.
+
+## 1.4 State — data that changes over time
+A component re-draws itself when its **state** changes. You create state with the **`useState`** hook:
+
+```tsx
+const [search, setSearch] = useState("");   // [current value, function to change it]
+```
+- `search` is the current value (starts as `""`).
+- Calling `setSearch("golf")` updates it **and tells React to re-render** the component with the new
+  value. You never assign `search = "golf"` directly — always go through the setter.
+
+This is the single most important idea in React: **UI is a function of state. Change state → React
+re-renders.**
+
+## 1.5 Events
+You respond to user actions with `on…` props that take a function:
+
+```tsx
+<input value={search} onChange={(e) => setSearch(e.target.value)} />
+```
+This is a **controlled input**: its `value` comes from state, and every keystroke calls `onChange`,
+which updates the state, which re-renders the input with the new value. Round and round.
+
+## 1.6 Lists and keys
+To render an array, use `.map()` to turn each item into JSX. React needs a unique **`key`** on each
+item so it can track them efficiently:
+
+```tsx
+{vehicles.map((v) => <li key={v.id}>{v.make}</li>)}
+```
+
+## 1.7 Conditional rendering
+Show different things with normal JavaScript expressions inside `{ }`:
+
+```tsx
+{isLoading ? <p>Loading…</p> : <List items={data} />}
+{error && <p>{error}</p>}        // "&&" shows the right side only if error is truthy
+```
+
+## 1.8 Hooks (and the rules)
+A **hook** is a special function whose name starts with `use…` that lets a component "hook into" React
+features (state, lifecycle, context). `useState` is one. Two rules, always:
+1. Only call hooks at the **top level** of a component (never inside `if`, loops, or `.map()`).
+2. Only call them **from components or other hooks**.
+
+> This is *why*, on the detail page, the "delete" button for a modification lives in its own
+> `ModificationRow` component — so the `useDeleteModification` hook can be called at the top level
+> instead of inside a `.map()`.
+
+- **`useEffect`** runs code *after* render — used for side effects like timers. Example here:
+  `use-debounce.ts` uses it to start/cancel a timer. (We mostly avoid `useEffect` for data fetching
+  now — see TanStack Query below.)
+- **Custom hooks** are just functions that call other hooks, so you can reuse logic. All our
+  `hooks/use-*.ts` files are custom hooks.
 
 ---
 
-## 2. What runs first — the boot order
+# Part 2 — Next.js from zero
 
-When you open, say, `http://localhost:3000/` :
+React alone doesn't give you URLs/pages, a build system, or server rendering. **Next.js** is the
+framework that adds those.
 
-1. **`app/layout.tsx` (`RootLayout`)** runs first. It's a **Server Component** that renders the HTML
-   shell: `<html>`, `<body>`, the header, and the page container. It places the current page into
-   `{children}`.
-2. Inside the layout, **`app/providers.tsx` (`Providers`)** wraps `{children}`. This is a **client
-   component** that creates the **TanStack Query `QueryClient`** (the cache) and shares it via React
-   context, so every page can use query hooks.
-3. **The page for the URL** renders — for `/` that's **`app/page.tsx` (`HomePage`)**, a client
-   component.
-4. The page **calls a hook**, e.g. `useVehicles(search)`.
-5. The hook's **`useQuery`** runs its **`queryFn`**, which calls **`lib/api.ts` → `getVehicles()` →
-   `request()` → `fetch()`** to the backend.
-6. While the request is in flight, `isLoading` is `true` → the page shows `Loading…`.
-   When it resolves, the data is **stored in the cache under its query key**, `isLoading` becomes
-   `false`, and the component **re-renders** with the data. On failure, `isError`/`error` are set.
-7. After that, **user actions** drive everything: typing updates state (which changes a query key and
-   refetches), submitting a form runs a **mutation** (which then *invalidates* caches so the screen
-   updates).
+## 2.1 File-based routing (the App Router)
+The URL structure mirrors the **`app/` folder**. A folder is a URL segment; a file named
+**`page.tsx`** makes that segment a real page:
 
-> **Server vs Client Components:** by default Next components render on the server. Anything that uses
-> hooks/state/events must start with `"use client"`. Here, the layout stays server-rendered (fast,
-> static shell) and the interactive pages opt into the client with `"use client"`.
+| File | URL |
+|---|---|
+| `app/page.tsx` | `/` |
+| `app/vehicles/new/page.tsx` | `/vehicles/new` |
+| `app/vehicles/[id]/page.tsx` | `/vehicles/123` (any id) |
+| `app/vehicles/[id]/edit/page.tsx` | `/vehicles/123/edit` |
+
+`[id]` is a **dynamic segment** — it matches any value, which you read with `useParams()`.
+
+## 2.2 Layouts
+**`app/layout.tsx`** wraps every page. It renders the shared shell (`<html>`, `<body>`, the header)
+and drops the current page into `{children}`. It runs **before** the page.
+
+## 2.3 Server Components vs Client Components — the key Next.js idea
+By default, Next.js components render **on the server** (fast, no JavaScript shipped). But anything
+interactive — `useState`, `useEffect`, events, browser APIs — must be a **Client Component**, marked
+by putting **`"use client";`** as the first line of the file.
+
+In this app: `layout.tsx` stays a Server Component (just a static shell), and every interactive page
+starts with `"use client";`.
+
+## 2.4 Navigation
+- **`<Link href="/vehicles/new">`** — client-side navigation (no full page reload).
+- **`useRouter()`** → `router.push("/…")` — navigate from code (e.g. after saving a form).
+- **`useParams()`** — read the dynamic `[id]` from the URL.
 
 ---
 
-## 3. Directory map
+# Part 3 — The other tools (and *why* each exists)
 
+React/Next give you the skeleton. These libraries handle specific jobs. **They all stack together —
+none replaces another.**
+
+## 3.1 TypeScript
+JavaScript with **types**. `interface VehicleResponse { make: string; year: number; … }` describes a
+shape; the editor then catches mistakes (typos, wrong arguments) before you run anything. Types are
+erased at build time — they don't exist in the running code. Our types live in `lib/types.ts`.
+
+## 3.2 TanStack Query — managing "server state"
+The data that lives in your **backend** (vehicles, modifications…) is "server state". Doing it by hand
+means `useState` + `useEffect` + `fetch` + loading/error flags on every page. TanStack Query replaces
+all that:
+
+```tsx
+const { data, isLoading, isError, error } = useQuery({
+  queryKey: ["vehicles", search],          // identity of this query in the cache
+  queryFn: () => getVehicles(search),       // how to fetch it
+});
+```
+- **`queryKey`** is an array that *identifies and caches* the result. `["vehicles","bmw"]` and
+  `["vehicles","golf"]` are stored separately. **Change the key → it refetches automatically.** That's
+  how search works: the term is part of the key.
+- **`useQuery`** = a **read**. It gives you `data`/`isLoading`/`isError` and caches the result so
+  revisiting a page is instant.
+- **`useMutation`** = a **write** (POST/PUT/DELETE). After it succeeds you call
+  **`invalidateQueries(key)`** to mark cached data stale so it refetches — that's how the screen stays
+  in sync after you add/delete something.
+
+> **Server state vs form state:** TanStack Query is **only** for backend data. What you're currently
+> *typing into a form* is local "form state" — a different job, handled by `useState` or React Hook
+> Form (below).
+
+## 3.3 React Hook Form + Zod — forms and validation
+- **React Hook Form (RHF)** manages all of a form's fields without a `useState` per field, and tracks
+  things like `isSubmitting`.
+- **Zod** is a schema/validation library. You declare the rules once, RHF checks them, and invalid
+  fields show inline errors **before** any API call.
+
+```tsx
+const schema = z.object({ make: z.string().min(1, "Make is required").max(100), /* … */ });
+const form = useForm({ resolver: zodResolver(schema) });
+```
+
+## 3.4 Tailwind CSS — styling with utility classes
+Instead of separate `.css` files, you put small single-purpose classes in `className`:
+`className="border rounded p-4"` = a border, rounded corners, padding. It reads verbose but keeps
+styles next to the markup and ships only the classes you use.
+
+## 3.5 shadcn/ui — components you own
+Pre-built, accessible components (`Button`, `Badge`, `Select`, `Form`, `Input`) that the shadcn tool
+**copied into `components/ui/`**. They're *your* files (built on Tailwind + Radix), so you can read and
+edit them — not a black-box package.
+
+---
+
+# Part 4 — How this app is wired
+
+## 4.1 The layered data flow (memorise this)
+```
+ Page (UI)              what to show          app/page.tsx, app/vehicles/...
+    │ calls
+ Custom hook            how to get data       hooks/use-*.ts   (useQuery / useMutation)
+    │ calls
+ API layer              the URLs              lib/api.ts       (request() → fetch())
+    │ HTTP
+ Spring Boot backend                          http://localhost:8080/api/v1
+```
+Each layer has **one job**. A component never calls `fetch` directly; it calls a hook.
+
+## 4.2 Directory map
 ```
 frontend/
-├─ app/                         ← routes (file-based routing) + global setup
-│  ├─ layout.tsx                ← root layout, runs first, wraps every page
-│  ├─ providers.tsx             ← sets up TanStack Query (client component)
-│  ├─ globals.css               ← Tailwind import + shadcn theme variables
-│  ├─ page.tsx                  ← "/"  → vehicle list + search
+├─ app/                       routes + global setup
+│  ├─ layout.tsx              root shell, runs first, wraps every page (Server Component)
+│  ├─ providers.tsx           sets up TanStack Query (Client Component)
+│  ├─ globals.css             Tailwind import + theme variables
+│  ├─ page.tsx                "/"                      → vehicle list + search
 │  └─ vehicles/
-│     ├─ new/page.tsx           ← "/vehicles/new"        → create form
+│     ├─ new/page.tsx         "/vehicles/new"          → create form
 │     └─ [id]/
-│        ├─ page.tsx            ← "/vehicles/:id"        → detail (mods, dyno, summary)
-│        └─ edit/page.tsx       ← "/vehicles/:id/edit"   → edit form
-│
+│        ├─ page.tsx          "/vehicles/:id"          → detail (summary, mods, dyno)
+│        └─ edit/page.tsx     "/vehicles/:id/edit"     → edit form
 ├─ components/
-│  ├─ VehicleForm.tsx           ← reusable create/edit form
-│  ├─ StatusBadge.tsx           ← colored PROJECT/DAILY/SOLD badge
-│  └─ ui/                       ← shadcn components we own (badge, button, select)
-│
-├─ hooks/                       ← the data-access layer (TanStack Query wrappers)
-│  ├─ use-vehicles.ts           ← vehicleKeys factory + list/single/create/update
-│  ├─ use-vehicle.ts            ← summary/mods/dyno reads + delete-vehicle
-│  ├─ use-modifications.ts      ← create/delete modification
-│  ├─ use-dyno.ts               ← create dyno result
-│  └─ use-debounce.ts           ← generic "wait until typing stops" helper
-│
+│  ├─ VehicleForm.tsx         reusable create/edit form (React Hook Form + Zod)
+│  ├─ StatusBadge.tsx         colored PROJECT/DAILY/SOLD badge
+│  └─ ui/                     shadcn components we own (badge, button, select, form, input, label)
+├─ hooks/                     the data-access layer (TanStack Query wrappers)
+│  ├─ use-vehicles.ts         vehicleKeys factory + list/single/create/update
+│  ├─ use-vehicle.ts          summary/mods/dyno reads + delete-vehicle
+│  ├─ use-modifications.ts    create/delete modification
+│  ├─ use-dyno.ts             create dyno result
+│  └─ use-debounce.ts         "wait until typing stops" helper
 └─ lib/
-   ├─ api.ts                    ← every backend call lives here (fetch layer)
-   ├─ types.ts                  ← TypeScript types mirroring the backend DTOs
-   └─ utils.ts                  ← cn() class-name helper (used by shadcn)
+   ├─ api.ts                  every backend call (fetch layer)
+   ├─ types.ts                TypeScript types mirroring the backend
+   └─ utils.ts                cn() class-name helper (used by shadcn)
 ```
 
-**Routing rule:** a folder under `app/` is a URL segment; a `page.tsx` makes that segment a real
-page. `[id]` is a **dynamic segment** — it matches any id and is read with `useParams()`.
+## 4.3 What runs first — the boot order
+Opening `http://localhost:3000/`:
+1. **`app/layout.tsx`** renders the HTML shell + header (Server Component), placing the page in
+   `{children}`.
+2. **`app/providers.tsx`** wraps the children and creates the TanStack Query **cache**
+   (`QueryClient`), shared via React context so any page can use query hooks.
+3. **`app/page.tsx` (`HomePage`)** renders (Client Component).
+4. It calls **`useVehicles(debouncedSearch)`**.
+5. That hook's `useQuery` runs its `queryFn` → **`lib/api.ts` `getVehicles()`** → `request()` →
+   `fetch()` to the backend.
+6. While waiting: `isLoading` is true → shows `Loading…`. On success: data is cached under the query
+   key, the component re-renders with it. On failure: `isError`/`error`.
+7. From there, **user actions** drive everything (typing changes a key → refetch; submitting a form
+   runs a mutation → invalidates caches → affected views refetch).
 
 ---
 
-## 4. The layers in detail
+# Part 5 — Every file, explained
 
-### 4a. `lib/api.ts` — the fetch layer
-The single place that knows how to talk to the backend.
+### `lib/api.ts` — the only place that talks to the backend
+- `BASE` = `process.env.NEXT_PUBLIC_API_BASE_URL` (from `.env.local`, read at startup).
+- `request<T>(path, options)` — shared helper: does the `fetch`, throws an `Error` (using the
+  backend's `{ "message": … }`) when the response isn't OK, returns nothing for `204` (DELETE), else
+  parses JSON.
+- One small function per endpoint: `getVehicles(search?)`, `getVehicle`, `createVehicle`,
+  `updateVehicle`, `deleteVehicle`, `getModifications`, `createModification`, `deleteModification`,
+  `getDynoResults`, `createDynoResult`, `getVehicleSummary`.
 
-- `const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1"` — the backend
-  URL. `NEXT_PUBLIC_*` vars are read from `.env.local` **at startup** (restart `npm run dev` after
-  editing them).
-- `request<T>(path, options)` — the shared helper used by every call: it `fetch`es, throws a normal
-  `Error` (using the backend's `{ "message": ... }`) when the response isn't OK, returns `undefined`
-  for empty `204` responses (DELETE), and otherwise parses JSON. `<T>` is "the type this call returns".
-- The exported functions are thin one-liners per endpoint: `getVehicles(search?)`, `getVehicle(id)`,
-  `createVehicle`, `updateVehicle`, `deleteVehicle`, `getModifications`, `createModification`,
-  `deleteModification`, `getDynoResults`, `createDynoResult`, `getVehicleSummary`.
-  `getVehicles` appends `&search=...` (URL-encoded) only when a search term is given.
+### `lib/types.ts` — the shapes
+TypeScript interfaces mirroring the backend DTOs (`VehicleRequest`/`Response`, etc.), the string
+enums `VehicleStatus` / `ModificationCategory`, the arrays used to build dropdowns
+(`VEHICLE_STATUSES`, `MODIFICATION_CATEGORIES`), and `PageResponse<T>` (the backend returns lists as a
+page with a `content` array).
 
-### 4b. `lib/types.ts` — the shapes
-TypeScript interfaces that **mirror the backend's DTOs**: `VehicleRequest`/`VehicleResponse`,
-`ModificationRequest`/`Response`, `DynoRequest`/`Response`, `VehicleSummaryResponse`, and
-`PageResponse<T>` (the backend returns lists as a "page" with a `content` array). It also defines the
-string-union enums `VehicleStatus` (`PROJECT | DAILY | SOLD`) and `ModificationCategory`, plus the
-`VEHICLE_STATUSES` / `MODIFICATION_CATEGORIES` arrays used to build dropdowns. These types are
-compile-time only — they vanish at runtime.
+### `lib/utils.ts`
+`cn(...)` merges Tailwind class names safely (used by the shadcn components).
 
-### 4c. `hooks/*` — the data-access layer
-Custom hooks that wrap TanStack Query so pages never call `fetch` directly.
+### `app/providers.tsx` (Client Component)
+Creates the `QueryClient` inside `useState(() => new QueryClient(...))` so there's exactly **one stable
+cache** per browser session (never create it at module scope). Sets `staleTime: 30s` (data is "fresh"
+for 30s before a background refetch). Wraps children in `<QueryClientProvider>`.
 
-- **Query keys** (`vehicleKeys` in `use-vehicles.ts`) are the heart of the cache. A key is an array,
-  e.g. `["vehicles", "civic"]` or `["vehicles", id, "summary"]`. TanStack Query stores each query's
-  result under its key, so different searches/vehicles don't overwrite each other. The factory keeps
-  these keys consistent in one place:
-  - `vehicleKeys.all` → `["vehicles"]` (invalidating this refetches *all* vehicle queries)
-  - `.list(search)`, `.detail(id)`, `.summary(id)`, `.modifications(id)`, `.dyno(id)`
-- **Read hooks** use `useQuery({ queryKey, queryFn })` and return `{ data, isLoading, isError, error }`.
-  `useQuery` runs `queryFn` on mount and **re-runs automatically whenever the key changes** (that's how
-  search works: the key includes the term). Examples: `useVehicles`, `useVehicle`,
-  `useVehicleSummary`, `useModifications`, `useDynoResults`.
-- **Mutation hooks** use `useMutation({ mutationFn, onSuccess })` for writes (POST/PUT/DELETE). You
-  call `.mutate(data)` or `await .mutateAsync(data)`, and read `.isPending` / `.error` for free.
-  In `onSuccess` they call `queryClient.invalidateQueries({ queryKey })` to mark the affected caches
-  stale so they refetch. Examples and *what they invalidate*:
-  - `useCreateVehicle` / `useUpdateVehicle` → the list (and the detail, for update)
-  - `useDeleteVehicle` → removes that vehicle's cached entries, invalidates the list
-  - `useCreateModification` / `useDeleteModification` → `modifications` **and** `summary`
-    (because the summary's `totalModifications`/`totalSpend` change)
-  - `useCreateDynoResult` → `dyno` **and** `summary` (the summary's power/torque change)
-- **`use-debounce.ts`** (`useDebounce(value, delay)`) returns a copy of `value` that only updates after
-  the value has been stable for `delay` ms. Used so search fires after you *stop* typing, not on every
-  keystroke.
+### `app/layout.tsx` (Server Component)
+The page shell + header; sets the browser-tab title; renders `<Providers>{children}</Providers>`.
 
-> **Why invalidation beats the old way:** previously the detail page kept a `refreshKey` counter and
-> re-ran one big `useEffect` that fetched everything. Now a mutation invalidates only the keys it
-> affected, so only that slice refetches (in the background) and the UI updates from cache.
+### `hooks/*` — the data-access layer
+- **`use-vehicles.ts`** — the **`vehicleKeys`** query-key factory (`all`, `list(search)`,
+  `detail(id)`, `summary(id)`, `modifications(id)`, `dyno(id)`) so keys are consistent in one place.
+  Hooks: `useVehicles(search)` (list), `useVehicle(id)` (one), `useCreateVehicle`, `useUpdateVehicle`
+  (mutations that invalidate the list/detail on success).
+- **`use-vehicle.ts`** — `useVehicleSummary`, `useModifications`, `useDynoResults` (reads), and
+  `useDeleteVehicle` (removes the vehicle's cache entries + invalidates the list).
+- **`use-modifications.ts`** — `useCreateModification` / `useDeleteModification`; both invalidate
+  `modifications` **and** `summary` (the summary's totals change).
+- **`use-dyno.ts`** — `useCreateDynoResult`; invalidates `dyno` **and** `summary`.
+- **`use-debounce.ts`** — `useDebounce(value, delay)`; returns a copy of `value` that only updates
+  after `delay` ms of no change (so search fires when you *stop* typing).
 
-### 4d. `app/providers.tsx` + `app/layout.tsx`
-- `providers.tsx` (`"use client"`) creates the `QueryClient` **inside `useState(() => new QueryClient())`**
-  — never at module scope — so there's exactly one stable cache per session. It sets `staleTime: 30s`
-  (data is considered "fresh" for 30s, avoiding refetch-on-every-navigation). It renders
-  `<QueryClientProvider>` around `children`.
-- `layout.tsx` is the **Server Component** that renders the page shell + header and drops
-  `<Providers>{children}</Providers>` in the middle. It also sets the tab `metadata` (title).
+### The pages
+- **`app/page.tsx` (list)** — holds `search` state, derives `debouncedSearch = useDebounce(search,300)`,
+  calls `useVehicles(debouncedSearch)`. Renders error / loading / empty (distinguishing "no match" vs
+  "no vehicles yet") / a list of cards, each linking to the detail page and showing a `<StatusBadge>`.
+- **`app/vehicles/new/page.tsx` (create)** — `useCreateVehicle()`, renders `<VehicleForm>`, and on
+  submit does `await createVehicle.mutateAsync(data)` then navigates to the new vehicle.
+- **`app/vehicles/[id]/page.tsx` (detail)** — reads `id` via `useParams()`, fires **four** queries
+  (`useVehicle`, `useVehicleSummary`, `useModifications`, `useDynoResults`). The `ModificationRow`,
+  `AddModificationForm`, and `AddDynoForm` are small components defined in the same file; the add-forms
+  use the create-mutation hooks and rely on invalidation (no manual reload). *(Those two add-forms
+  still use `useState` per field — they're simple enough that they weren't moved to React Hook Form.)*
+- **`app/vehicles/[id]/edit/page.tsx` (edit)** — `useVehicle(id)` to pre-fill, `useUpdateVehicle(id)`
+  to save, then navigates back to the detail page.
 
-### 4e. The pages (`app/**/page.tsx`)
-All are `"use client"` because they use hooks/state/events.
+### `components/VehicleForm.tsx` — the form (React Hook Form + Zod)
+One reusable form for **both** create and edit. How it works:
+- `vehicleSchema` (Zod) declares the rules, mirroring the backend (`make` required ≤100, `year`
+  1900–2100, `status` enum, etc.). `z.coerce.number()` turns the text input into a number; empty
+  `notes` becomes `undefined`.
+- `useForm({ resolver: zodResolver(vehicleSchema), defaultValues })` manages all fields. `defaultValues`
+  come from `initialValue` (or sensible blanks; `status` defaults to `PROJECT`).
+- Each field uses shadcn's `<FormField>`/`<FormItem>`/`<FormLabel>`/`<FormControl>`/`<FormMessage>` —
+  `<FormMessage>` shows that field's validation error automatically.
+- The status `<Select>` (a Radix component, not a native input) is wired with
+  `value={field.value} onValueChange={field.onChange}` — the "controller" pattern for non-native inputs.
+- On submit, RHF validates; if valid it calls `onSubmit(values)` (the prop the parent passed, which runs
+  the mutation). API errors are caught into `submitError`; the button uses `form.formState.isSubmitting`.
+- **Important:** the form takes an `onSubmit` prop and knows nothing about TanStack Query — that's what
+  lets the same form serve both the create and edit pages.
 
-- **`page.tsx` (list, `/`)** — keeps `search` state for the input, derives `debouncedSearch =
-  useDebounce(search, 300)`, and calls `useVehicles(debouncedSearch)`. Renders one of four states:
-  error / loading / empty (distinguishing "no match" vs "no vehicles yet") / the list of cards. Each
-  card links to the detail page and shows a `<StatusBadge>`.
-- **`vehicles/new/page.tsx` (create)** — gets `useCreateVehicle()`, renders `<VehicleForm>`, and on
-  submit does `await createVehicle.mutateAsync(data)` then `router.push("/vehicles/{newId}")`. The
-  hook's `onSuccess` already invalidated the list.
-- **`vehicles/[id]/page.tsx` (detail)** — reads the id with `useParams()`, then fires **four
-  independent queries** (`useVehicle`, `useVehicleSummary`, `useModifications`, `useDynoResults`).
-  Renders the header (+ badge + Edit/Delete), the summary stats, the modifications list, and the dyno
-  list. `ModificationRow` is its own component **so it can call `useDeleteModification` at the top
-  level** (hooks can't be called inside a `.map()` callback). The inline `AddModificationForm` /
-  `AddDynoForm` use the create-mutation hooks and rely on invalidation to refresh — no manual reload.
-- **`vehicles/[id]/edit/page.tsx` (edit)** — `useVehicle(id)` loads the current values to pre-fill,
-  builds an `initialValue`, and `useUpdateVehicle(id)` saves; on success it navigates back to detail.
+### `components/StatusBadge.tsx`
+Wraps shadcn `<Badge>` and maps each `VehicleStatus` to Tailwind colours in one place
+(PROJECT = blue, DAILY = green, SOLD = red).
 
-### 4f. The components
-- **`VehicleForm.tsx`** — one reusable form for **both** create and edit. Each field is a *controlled
-  input*: its value lives in `useState`, the input shows that state, and `onChange` updates it. The
-  status field is a shadcn `<Select>` (note it uses `onValueChange={(v) => ...}` — Radix gives you the
-  value directly, unlike a native `<select onChange={e => e.target.value}>`). On submit it builds a
-  `VehicleRequest` and calls the `onSubmit` prop the parent passed in.
-- **`StatusBadge.tsx`** — wraps the shadcn `<Badge>` and maps each `VehicleStatus` to Tailwind colour
-  classes (`PROJECT`=blue, `DAILY`=green, `SOLD`=red) in one place, so the "business meaning" of the
-  colours lives in a single file.
-- **`components/ui/*`** — shadcn primitives (`badge`, `button`, `select`) generated into the repo;
-  edit them freely. `lib/utils.ts`'s `cn()` merges Tailwind classes safely.
+### `components/ui/*`
+Generated shadcn primitives — edit freely; they're yours.
 
 ---
 
-## 5. Two end-to-end traces
+# Part 6 — Two end-to-end traces
 
 **A) You type "golf" in the search box**
-1. `onChange` → `setSearch("golf")` re-renders `HomePage`.
-2. `useDebounce` waits 300ms; if you keep typing it resets. Once you pause, `debouncedSearch` becomes
-   `"golf"`.
-3. That changes `useVehicles`' query key to `["vehicles", "golf"]`. TanStack Query sees a new key,
-   runs `queryFn` → `getVehicles("golf")` → `GET /api/v1/vehicles?...&search=golf`.
-4. Response is cached under that key; the list re-renders filtered. Clear the box → key becomes
-   `["vehicles", ""]` → full list (and "golf" stays cached for 30s if you retype it).
+1. `onChange` → `setSearch("golf")` → re-render.
+2. `useDebounce` waits 300ms (resets if you keep typing) → `debouncedSearch` becomes `"golf"`.
+3. That changes `useVehicles`' key to `["vehicles","golf"]` → TanStack Query runs `queryFn` →
+   `getVehicles("golf")` → `GET /vehicles?…&search=golf`.
+4. Result cached under that key; the filtered list renders. Clearing the box → key `["vehicles",""]` →
+   full list (and "golf" stays cached ~30s).
 
 **B) You add a modification on the detail page**
-1. `AddModificationForm` submit → `createMod.mutate(data)` (`useCreateModification`).
+1. `AddModificationForm` submit → `createMod.mutateAsync(data)` (`useCreateModification`).
 2. `mutationFn` → `createModification(vehicleId, data)` → `POST /vehicles/{id}/modifications`.
 3. `onSuccess` → `invalidateQueries(modifications(id))` **and** `invalidateQueries(summary(id))`.
-4. TanStack Query refetches just those two; the modifications list and the summary stats update — the
-   vehicle header and dyno list are untouched.
+4. Only those two refetch; the modifications list and summary update — the header and dyno list are
+   untouched.
 
 ---
 
-## 6. Running it
+# Part 7 — Running it
 
 ```bash
-npm install          # first time / after pulling new deps
-npm run dev          # http://localhost:3000
+npm install        # first time / after pulling new dependencies
+npm run dev        # starts the dev server at http://localhost:3000
 ```
-
-- Point the frontend at your backend in **`frontend/.env.local`**:
+- Set the backend URL in **`frontend/.env.local`**:
   `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1` (or your Codespace's public `:8080` URL).
-  **Restart `npm run dev` after changing it** — env vars are read at startup.
-- The backend must be running and reachable, with CORS allowing `http://localhost:3000` (it does by
-  default).
+  **Restart `npm run dev` after editing it** — env vars are read at startup.
+- The backend must be running and allow `http://localhost:3000` via CORS (it does by default).
 
 ```bash
-npm run build        # production build (also full type-check)
-npx tsc --noEmit     # type-check only
-npm run lint         # eslint
+npx tsc --noEmit   # type-check only — the reliable "is my code correct?" check
+npm run build      # production build (also type-checks)
+npm run lint       # eslint
 ```
+> **Build gotcha:** because this project lives under **OneDrive** and the dev server holds the `.next`
+> folder open, `npm run build` can throw `EPERM … unlink … .next…`. It's not a code error — stop
+> `npm run dev`, optionally delete `.next`, and rebuild. For checking your code, prefer `npx tsc
+> --noEmit` (it never touches `.next`).
 
 ---
 
-## 7. Mini-glossary
+# Part 8 — Glossary
 
 | Term | Meaning |
-|------|---------|
-| **Server Component** | Renders on the server; no hooks/state. Default in Next App Router. |
-| **Client Component** | Starts with `"use client"`; can use hooks, state, events, browser APIs. |
-| **`useState`** | Holds a value that, when changed, re-renders the component. |
-| **`useEffect`** | Runs side-effects after render (timers, subscriptions). We mostly avoid it for fetching now. |
+|---|---|
+| **Component** | A function that returns JSX (the UI). |
+| **JSX** | HTML-like syntax inside JavaScript; `{ }` embeds JS. |
+| **Prop** | An input passed into a component (like a function argument). |
+| **State** | Data that, when changed via its setter, re-renders the component. |
+| **Hook** | A `use…` function that taps into React features; call at the top level only. |
+| **`useState`** | Holds local state: `[value, setValue]`. |
+| **`useEffect`** | Runs a side effect after render (timers, subscriptions). |
+| **Custom hook** | A function that calls other hooks to reuse logic (our `use-*` files). |
+| **Server Component** | Renders on the server; no state/events. Default in Next. |
+| **Client Component** | Starts with `"use client"`; can use hooks/state/events. |
 | **`useQuery`** | TanStack Query read: fetch + cache + loading/error, keyed by `queryKey`. |
-| **`queryKey`** | The array that identifies/caches a query; changing it refetches. |
-| **`staleTime`** | How long cached data is "fresh" before a background refetch is allowed. |
-| **`useMutation`** | TanStack Query write (POST/PUT/DELETE); `.mutate()`, `.isPending`, `onSuccess`. |
-| **`invalidateQueries`** | Marks cached queries stale so they refetch — how the UI stays in sync after writes. |
-| **Controlled input** | An input whose value is driven by React state (`value` + `onChange`). |
-| **Debounce** | Wait until a value stops changing before acting on it. |
-| **Query-key factory** | The `vehicleKeys` object that builds consistent keys in one place. |
+| **`queryKey`** | Array identifying/caching a query; changing it refetches. |
+| **`useMutation`** | TanStack Query write; `.mutate()/.mutateAsync()`, `isPending`, `onSuccess`. |
+| **`invalidateQueries`** | Marks cached queries stale so they refetch — keeps the UI in sync after writes. |
+| **`staleTime`** | How long cached data counts as "fresh" before a background refetch. |
+| **Controlled input** | An input whose `value` is driven by state (`value` + `onChange`). |
+| **React Hook Form** | Manages form fields/submission without a `useState` per field. |
+| **Zod** | Schema/validation library; defines the rules a form checks. |
+| **Tailwind** | Utility-class CSS (`px-4`, `text-sm`) in `className`. |
+| **shadcn/ui** | Prebuilt components copied into `components/ui/` that you own. |
