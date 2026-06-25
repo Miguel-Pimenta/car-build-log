@@ -1,4 +1,4 @@
-"use client"; // This component runs in the browser, so it can use React hooks.
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -6,28 +6,16 @@ import { useVehicles } from "@/hooks/use-vehicles";
 import StatusBadge from "@/components/StatusBadge";
 import { useDebounce } from "@/hooks/use-debounce";
 
-// BEFORE (manual data fetching):
-//   useEffect + setTimeout + setLoading/setError/setVehicles — ~20 lines of
-//   boilerplate per data fetch, no caching, no background refetch.
-//
-// AFTER (TanStack Query):
-//   const { data, isLoading, isError } = useVehicles(debouncedSearch)
-//   Query result is cached, refetched when the window regains focus, and
-//   shared with any other component that calls the same hook.
-
 export default function HomePage() {
-  // `search` tracks every keystroke; `debouncedSearch` only updates after
-  // the user pauses typing for 300 ms. We pass `debouncedSearch` to the query
-  // so we don't fire an API request on every character.
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
 
-  // `useVehicles` wraps TanStack Query's `useQuery`. It returns:
-  //   data        → the array of vehicles (undefined while loading)
-  //   isLoading   → true on the very first fetch (no cached data yet)
-  //   isError     → true if the fetch threw
-  //   error       → the Error object when isError is true
-  const { data: vehicles, isLoading, isError, error } = useVehicles(debouncedSearch);
+  const {
+    data: vehicles,
+    isLoading,
+    isError,
+    error,
+  } = useVehicles(debouncedSearch);
 
   return (
     <div>
@@ -41,8 +29,6 @@ export default function HomePage() {
         </Link>
       </div>
 
-      {/* Typing here updates `search`. After 300ms of no typing, `debouncedSearch`
-          updates too, which changes the query key and triggers a new fetch. */}
       <input
         placeholder="Search by make or model…"
         value={search}
@@ -51,7 +37,6 @@ export default function HomePage() {
         aria-label="Search vehicles"
       />
 
-      {/* The search input stays mounted; only this area below re-renders. */}
       {isError ? (
         <p className="text-red-600">
           Could not load vehicles: {error?.message}
@@ -59,7 +44,6 @@ export default function HomePage() {
       ) : isLoading ? (
         <p>Loading…</p>
       ) : vehicles?.length === 0 ? (
-        // Preserve the original two distinct empty states.
         <p className="text-gray-500">
           {debouncedSearch
             ? `No vehicles match "${debouncedSearch}".`
@@ -67,8 +51,6 @@ export default function HomePage() {
         </p>
       ) : (
         <ul className="space-y-3">
-          {/* Turn each vehicle in the array into a list item. `key` helps React
-              know which item changed/moved when the list updates. */}
           {vehicles?.map((vehicle) => (
             <li key={vehicle.id}>
               <Link

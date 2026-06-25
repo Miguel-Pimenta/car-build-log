@@ -1,12 +1,8 @@
-// TypeScript types that describe the data the backend sends and receives.
-// They don't do anything at runtime - they just help the editor catch mistakes.
-
 export type VehicleStatus =
   | "PROJECT"
   | "DAILY"
   | "SOLD";
 
-// A plain list of the statuses above, so we can build a dropdown from it.
 export const VEHICLE_STATUSES: VehicleStatus[] = ["PROJECT", "DAILY", "SOLD"];
 
 export type ModificationCategory =
@@ -19,7 +15,6 @@ export type ModificationCategory =
   | "COSMETIC"
   | "OTHER";
 
-// A plain list of the categories above, so we can build a dropdown from it.
 export const MODIFICATION_CATEGORIES: ModificationCategory[] = [
   "ENGINE",
   "EXHAUST",
@@ -30,8 +25,6 @@ export const MODIFICATION_CATEGORIES: ModificationCategory[] = [
   "COSMETIC",
   "OTHER",
 ];
-
-// ---- What we SEND to the backend ----
 
 export interface VehicleRequest {
   make: string;
@@ -47,7 +40,7 @@ export interface ModificationRequest {
   name: string;
   partNumber?: string;
   cost: number;
-  installedAt: string; // a date like "2024-03-10"
+  installedAt: string;
   mileageKmAtInstall: number;
 }
 
@@ -57,8 +50,6 @@ export interface DynoRequest {
   measuredAt: string;
   notes?: string;
 }
-
-// ---- What we GET BACK from the backend ----
 
 export interface VehicleResponse {
   id: string;
@@ -103,7 +94,6 @@ export interface VehicleSummaryResponse {
   currentTorqueNm: number | null;
 }
 
-// The backend returns lists in "pages". We only use `content` (the array).
 export interface PageResponse<T> {
   content: T[];
   page: number;
