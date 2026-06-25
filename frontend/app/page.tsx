@@ -1,36 +1,33 @@
 "use client"; // This component runs in the browser, so it can use React hooks.
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { getVehicles } from "@/lib/api";
+import { useVehicles } from "@/hooks/use-vehicles";
 import StatusBadge from "@/components/StatusBadge";
-import type { VehicleResponse } from "@/lib/types";
+import { useDebounce } from "@/hooks/use-debounce";
+
+// BEFORE (manual data fetching):
+//   useEffect + setTimeout + setLoading/setError/setVehicles — ~20 lines of
+//   boilerplate per data fetch, no caching, no background refetch.
+//
+// AFTER (TanStack Query):
+//   const { data, isLoading, isError } = useVehicles(debouncedSearch)
+//   Query result is cached, refetched when the window regains focus, and
+//   shared with any other component that calls the same hook.
 
 export default function HomePage() {
-  // `useState` gives us a value and a function to change it. When we change it,
-  // React re-renders this component.
-  const [vehicles, setVehicles] = useState<VehicleResponse[]>([]); // the data
-  const [loading, setLoading] = useState(true); // are we still loading?
-  const [error, setError] = useState(""); // any error message
-  const [search, setSearch] = useState(""); // what's typed in the search box
+  // `search` tracks every keystroke; `debouncedSearch` only updates after
+  // the user pauses typing for 300 ms. We pass `debouncedSearch` to the query
+  // so we don't fire an API request on every character.
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
 
-  // This effect re-runs whenever `search` changes (note the [search] at the end).
-  // So as you type, the list re-fetches from the backend with your search term.
-  useEffect(() => {
-    // Debounce: wait 300ms after the last keystroke before calling the API, so
-    // we don't fire a request on every single character.
-    const timer = setTimeout(() => {
-      setLoading(true);
-      setError("");
-      getVehicles(search)
-        .then((page) => setVehicles(page.content))
-        .catch((err) => setError(err.message))
-        .finally(() => setLoading(false));
-    }, 300);
-
-    // If `search` changes again before 300ms passes, cancel the pending call.
-    return () => clearTimeout(timer);
-  }, [search]);
+  // `useVehicles` wraps TanStack Query's `useQuery`. It returns:
+  //   data        → the array of vehicles (undefined while loading)
+  //   isLoading   → true on the very first fetch (no cached data yet)
+  //   isError     → true if the fetch threw
+  //   error       → the Error object when isError is true
+  const { data: vehicles, isLoading, isError, error } = useVehicles(debouncedSearch);
 
   return (
     <div>
@@ -44,29 +41,35 @@ export default function HomePage() {
         </Link>
       </div>
 
-      {/* Typing here updates `search`, which re-runs the effect above. */}
+      {/* Typing here updates `search`. After 300ms of no typing, `debouncedSearch`
+          updates too, which changes the query key and triggers a new fetch. */}
       <input
         placeholder="Search by make or model…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="border rounded px-3 py-1.5 w-full mb-4"
+        aria-label="Search vehicles"
       />
 
-      {/* The search box above stays mounted; only this area below changes. */}
-      {error ? (
-        <p className="text-red-600">Could not load vehicles: {error}</p>
-      ) : loading ? (
+      {/* The search input stays mounted; only this area below re-renders. */}
+      {isError ? (
+        <p className="text-red-600">
+          Could not load vehicles: {error?.message}
+        </p>
+      ) : isLoading ? (
         <p>Loading…</p>
-      ) : vehicles.length === 0 ? (
+      ) : vehicles?.length === 0 ? (
+        // Preserve the original two distinct empty states.
         <p className="text-gray-500">
-          {search
-            ? `No vehicles match “${search}”.`
+          {debouncedSearch
+            ? `No vehicles match "${debouncedSearch}".`
             : "No vehicles yet. Add your first one!"}
         </p>
       ) : (
         <ul className="space-y-3">
-          {/* Turn each vehicle in the array into a list item. `key` helps React. */}
-          {vehicles.map((vehicle) => (
+          {/* Turn each vehicle in the array into a list item. `key` helps React
+              know which item changed/moved when the list updates. */}
+          {vehicles?.map((vehicle) => (
             <li key={vehicle.id}>
               <Link
                 href={`/vehicles/${vehicle.id}`}

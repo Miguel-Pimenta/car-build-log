@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Providers } from "./providers";
 import "./globals.css";
 
 // `metadata` sets the browser tab title. Only layouts/pages can export this.
@@ -9,6 +10,9 @@ export const metadata: Metadata = {
 };
 
 // The layout wraps every page. `children` is whichever page is currently shown.
+// RootLayout itself stays a Server Component — only the <Providers> wrapper
+// inside it needs to be a client component (because QueryClientProvider uses
+// React context). This keeps the HTML shell server-rendered.
 export default function RootLayout({
   children,
 }: {
@@ -26,7 +30,10 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main className="max-w-3xl mx-auto px-4 py-6">{children}</main>
+        {/* Providers wraps children so TanStack Query is available everywhere. */}
+        <main className="max-w-3xl mx-auto px-4 py-6">
+          <Providers>{children}</Providers>
+        </main>
       </body>
     </html>
   );

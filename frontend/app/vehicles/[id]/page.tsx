@@ -1,77 +1,50 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import {
-  getVehicle,
-  getVehicleSummary,
-  getModifications,
-  getDynoResults,
-  createModification,
-  deleteModification,
-  createDynoResult,
-  deleteVehicle,
-} from "@/lib/api";
 import StatusBadge from "@/components/StatusBadge";
 import { MODIFICATION_CATEGORIES } from "@/lib/types";
-import type {
-  VehicleResponse,
-  VehicleSummaryResponse,
-  ModificationResponse,
-  DynoResponse,
-  ModificationCategory,
-} from "@/lib/types";
+import type { ModificationCategory } from "@/lib/types";
+import { useVehicle } from "@/hooks/use-vehicles";
+import {
+  useVehicleSummary,
+  useModifications,
+  useDynoResults,
+  useDeleteVehicle,
+} from "@/hooks/use-vehicle";
+import {
+  useCreateModification,
+  useDeleteModification,
+} from "@/hooks/use-modifications";
+import { useCreateDynoResult } from "@/hooks/use-dyno";
 
 export default function VehicleDetailPage() {
-  const params = useParams(); // reads the {id} from the URL
+  const params = useParams();
   const id = params.id as string;
   const router = useRouter();
 
-  // One piece of state per thing we load from the backend.
-  const [vehicle, setVehicle] = useState<VehicleResponse | null>(null);
-  const [summary, setSummary] = useState<VehicleSummaryResponse | null>(null);
-  const [mods, setMods] = useState<ModificationResponse[]>([]);
-  const [dynos, setDynos] = useState<DynoResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  // Four separate useQuery hooks replace the single useEffect that loaded
+  // everything sequentially. Each query is cached independently, so when you
+  // add a modification only the modifications and summary queries refetch —
+  // not the vehicle header or dyno list.
+  const { data: vehicle, isLoading: vehicleLoading, error: vehicleError } = useVehicle(id);
+  const { data: summary } = useVehicleSummary(id);
+  const { data: mods = [], isLoading: modsLoading } = useModifications(id);
+  const { data: dynos = [], isLoading: dynosLoading } = useDynoResults(id);
 
-  // Bumping `refreshKey` re-runs the effect below, which re-loads everything.
-  // We call reload() after adding/deleting so the screen stays up to date.
-  const [refreshKey, setRefreshKey] = useState(0);
-  function reload() {
-    setRefreshKey((key) => key + 1);
-  }
-
-  useEffect(() => {
-    async function load() {
-      try {
-        setVehicle(await getVehicle(id));
-        setSummary(await getVehicleSummary(id));
-        setMods(await getModifications(id));
-        setDynos(await getDynoResults(id));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not load vehicle");
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, [id, refreshKey]);
+  const deleteVehicle = useDeleteVehicle();
 
   async function handleDeleteVehicle() {
     if (!window.confirm("Delete this vehicle and everything in it?")) return;
-    await deleteVehicle(id);
-    router.push("/"); // back to the list
+    await deleteVehicle.mutateAsync(id);
+    // Navigate home after deletion. The hook already removes cached entries.
+    router.push("/");
   }
 
-  async function handleDeleteMod(modId: string) {
-    await deleteModification(modId);
-    reload();
-  }
-
-  if (loading) return <p>Loading…</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  // Show a loading state until at least the vehicle header is ready.
+  if (vehicleLoading) return <p>Loading…</p>;
+  if (vehicleError) return <p className="text-red-600">{vehicleError.message}</p>;
   if (!vehicle) return null;
 
   return (
@@ -136,48 +109,26 @@ export default function VehicleDetailPage() {
       {/* ---- Modifications ---- */}
       <section>
         <h2 className="text-lg font-semibold mb-2">
-          Modifications ({mods.length})
+          Modifications ({modsLoading ? "…" : mods.length})
         </h2>
-        {mods.length === 0 ? (
+        {!modsLoading && mods.length === 0 ? (
           <p className="text-gray-500 mb-3">No modifications yet.</p>
         ) : (
           <ul className="space-y-2 mb-3">
             {mods.map((mod) => (
-              <li
-                key={mod.id}
-                className="bg-white border rounded p-3 flex justify-between items-start gap-3"
-              >
-                <div>
-                  <p className="font-medium">
-                    {mod.name}{" "}
-                    <span className="text-xs text-gray-500">
-                      ({mod.category})
-                    </span>
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {formatMoney(mod.cost)} · {mod.installedAt} ·{" "}
-                    {mod.mileageKmAtInstall} km
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleDeleteMod(mod.id)}
-                  className="text-red-600 text-sm shrink-0"
-                >
-                  Delete
-                </button>
-              </li>
+              <ModificationRow key={mod.id} mod={mod} vehicleId={id} />
             ))}
           </ul>
         )}
-        <AddModificationForm vehicleId={id} onAdded={reload} />
+        <AddModificationForm vehicleId={id} />
       </section>
 
       {/* ---- Dyno results ---- */}
       <section>
         <h2 className="text-lg font-semibold mb-2">
-          Dyno results ({dynos.length})
+          Dyno results ({dynosLoading ? "…" : dynos.length})
         </h2>
-        {dynos.length === 0 ? (
+        {!dynosLoading && dynos.length === 0 ? (
           <p className="text-gray-500 mb-3">No dyno runs yet.</p>
         ) : (
           <ul className="space-y-2 mb-3">
@@ -194,7 +145,7 @@ export default function VehicleDetailPage() {
             ))}
           </ul>
         )}
-        <AddDynoForm vehicleId={id} onAdded={reload} />
+        <AddDynoForm vehicleId={id} />
       </section>
     </div>
   );
@@ -215,44 +166,66 @@ function formatMoney(value: number): string {
   return "€" + Number(value).toFixed(2);
 }
 
-// Form to add a modification. It keeps its own state for the inputs, and calls
-// onAdded() after a successful save so the parent page reloads its lists.
-function AddModificationForm({
+// Extracted into its own component so it can call useDeleteModification
+// directly — hooks must be called at the top level of a component, not inside
+// a .map() callback.
+function ModificationRow({
+  mod,
   vehicleId,
-  onAdded,
 }: {
+  mod: { id: string; name: string; category: string; cost: number; installedAt: string; mileageKmAtInstall: number };
   vehicleId: string;
-  onAdded: () => void;
 }) {
+  const deleteMod = useDeleteModification(vehicleId);
+
+  return (
+    <li className="bg-white border rounded p-3 flex justify-between items-start gap-3">
+      <div>
+        <p className="font-medium">
+          {mod.name}{" "}
+          <span className="text-xs text-gray-500">({mod.category})</span>
+        </p>
+        <p className="text-sm text-gray-500">
+          {formatMoney(mod.cost)} · {mod.installedAt} · {mod.mileageKmAtInstall} km
+        </p>
+      </div>
+      <button
+        onClick={() => deleteMod.mutate(mod.id)}
+        disabled={deleteMod.isPending}
+        className="text-red-600 text-sm shrink-0 disabled:opacity-50"
+      >
+        {deleteMod.isPending ? "Deleting…" : "Delete"}
+      </button>
+    </li>
+  );
+}
+
+// Form to add a modification. State lives here; after a successful save
+// useMutation's onSuccess invalidates the cache — no manual reload() call needed.
+function AddModificationForm({ vehicleId }: { vehicleId: string }) {
   const [category, setCategory] = useState<ModificationCategory>("ENGINE");
   const [name, setName] = useState("");
   const [cost, setCost] = useState("");
   const [installedAt, setInstalledAt] = useState("");
   const [mileage, setMileage] = useState("");
-  const [error, setError] = useState("");
+
+  // useCreateModification invalidates modifications + summary on success.
+  const createMod = useCreateModification(vehicleId);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError("");
-    try {
-      await createModification(vehicleId, {
-        category,
-        name,
-        cost: Number(cost),
-        installedAt,
-        mileageKmAtInstall: Number(mileage),
-      });
-      // Clear the inputs after a successful add.
-      setName("");
-      setCost("");
-      setInstalledAt("");
-      setMileage("");
-      onAdded();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not add modification",
-      );
-    }
+    await createMod.mutateAsync({
+      category,
+      name,
+      cost: Number(cost),
+      installedAt,
+      mileageKmAtInstall: Number(mileage),
+    });
+    // Clear inputs after a successful add.
+    setName("");
+    setCost("");
+    setInstalledAt("");
+    setMileage("");
   }
 
   return (
@@ -261,7 +234,9 @@ function AddModificationForm({
       className="bg-white border rounded p-3 space-y-2"
     >
       <p className="font-medium text-sm">Add a modification</p>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {createMod.error && (
+        <p className="text-red-600 text-sm">{createMod.error.message}</p>
+      )}
       <div className="grid sm:grid-cols-2 gap-2">
         <select
           value={category}
@@ -301,46 +276,38 @@ function AddModificationForm({
           className="border rounded px-2 py-1.5"
         />
       </div>
-      <button className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm">
-        Add
+      <button
+        type="submit"
+        disabled={createMod.isPending}
+        className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm disabled:opacity-50"
+      >
+        {createMod.isPending ? "Adding…" : "Add"}
       </button>
     </form>
   );
 }
 
-function AddDynoForm({
-  vehicleId,
-  onAdded,
-}: {
-  vehicleId: string;
-  onAdded: () => void;
-}) {
+function AddDynoForm({ vehicleId }: { vehicleId: string }) {
   const [powerHp, setPowerHp] = useState("");
   const [torqueNm, setTorqueNm] = useState("");
   const [measuredAt, setMeasuredAt] = useState("");
   const [notes, setNotes] = useState("");
-  const [error, setError] = useState("");
+
+  // useCreateDynoResult invalidates dyno list + summary on success.
+  const createDyno = useCreateDynoResult(vehicleId);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError("");
-    try {
-      await createDynoResult(vehicleId, {
-        powerHp: Number(powerHp),
-        torqueNm: Number(torqueNm),
-        measuredAt,
-        notes: notes || undefined,
-      });
-      setPowerHp("");
-      setTorqueNm("");
-      setMeasuredAt("");
-      setNotes("");
-      onAdded();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not add dyno result",
-      );
-    }
+    await createDyno.mutateAsync({
+      powerHp: Number(powerHp),
+      torqueNm: Number(torqueNm),
+      measuredAt,
+      notes: notes || undefined,
+    });
+    setPowerHp("");
+    setTorqueNm("");
+    setMeasuredAt("");
+    setNotes("");
   }
 
   return (
@@ -349,7 +316,9 @@ function AddDynoForm({
       className="bg-white border rounded p-3 space-y-2"
     >
       <p className="font-medium text-sm">Add a dyno result</p>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {createDyno.error && (
+        <p className="text-red-600 text-sm">{createDyno.error.message}</p>
+      )}
       <div className="grid sm:grid-cols-2 gap-2">
         <input
           placeholder="Power (HP)"
@@ -378,8 +347,12 @@ function AddDynoForm({
           className="border rounded px-2 py-1.5"
         />
       </div>
-      <button className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm">
-        Add
+      <button
+        type="submit"
+        disabled={createDyno.isPending}
+        className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm disabled:opacity-50"
+      >
+        {createDyno.isPending ? "Adding…" : "Add"}
       </button>
     </form>
   );
