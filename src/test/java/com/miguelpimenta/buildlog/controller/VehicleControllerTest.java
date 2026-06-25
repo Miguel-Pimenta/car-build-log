@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.miguelpimenta.buildlog.dto.VehicleResponse;
 import com.miguelpimenta.buildlog.exception.ResourceNotFoundException;
+import com.miguelpimenta.buildlog.model.VehicleStatus;
 import com.miguelpimenta.buildlog.service.VehicleService;
 import java.time.Instant;
 import java.util.UUID;
@@ -39,7 +40,15 @@ class VehicleControllerTest {
     UUID id = UUID.randomUUID();
     when(vehicleService.create(any()))
         .thenReturn(
-            new VehicleResponse(id, "Volkswagen", "Golf", 2015, "EA288", null, Instant.now()));
+            new VehicleResponse(
+                id,
+                "Volkswagen",
+                "Golf",
+                2015,
+                "EA288",
+                VehicleStatus.PROJECT,
+                null,
+                Instant.now()));
 
     mockMvc
         .perform(
@@ -47,7 +56,7 @@ class VehicleControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
-                                {"make":"Volkswagen","model":"Golf","year":2015,"engineCode":"EA288"}
+                                {"make":"Volkswagen","model":"Golf","year":2015,"engineCode":"EA288","status":"PROJECT"}
                                 """))
         .andExpect(status().isCreated())
         .andExpect(header().string("Location", endsWith("/api/v1/vehicles/" + id)))

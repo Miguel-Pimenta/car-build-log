@@ -13,6 +13,7 @@ import {
   createDynoResult,
   deleteVehicle,
 } from "@/lib/api";
+import StatusBadge from "@/components/StatusBadge";
 import { MODIFICATION_CATEGORIES } from "@/lib/types";
 import type {
   VehicleResponse,
@@ -78,9 +79,12 @@ export default function VehicleDetailPage() {
       {/* ---- Vehicle header ---- */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">
-            {vehicle.year} {vehicle.make} {vehicle.model}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">
+              {vehicle.year} {vehicle.make} {vehicle.model}
+            </h1>
+            <StatusBadge status={vehicle.status} />
+          </div>
           <p className="text-gray-500">{vehicle.engineCode}</p>
           {vehicle.notes && (
             <p className="mt-1 text-gray-600">{vehicle.notes}</p>

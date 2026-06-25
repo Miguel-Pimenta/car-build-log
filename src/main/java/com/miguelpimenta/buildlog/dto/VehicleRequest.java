@@ -1,8 +1,10 @@
 package com.miguelpimenta.buildlog.dto;
 
+import com.miguelpimenta.buildlog.model.VehicleStatus;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -14,4 +16,5 @@ public record VehicleRequest(
     @NotBlank @Size(max = 100) String model,
     @Min(1900) @Max(2100) int year,
     @NotBlank @Size(max = 50) String engineCode,
+    @NotNull VehicleStatus status,
     @Size(max = 2000) String notes) {}

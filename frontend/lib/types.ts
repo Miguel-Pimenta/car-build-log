@@ -1,6 +1,14 @@
 // TypeScript types that describe the data the backend sends and receives.
 // They don't do anything at runtime - they just help the editor catch mistakes.
 
+export type VehicleStatus =
+  | "PROJECT"
+  | "DAILY"
+  | "SOLD";
+
+// A plain list of the statuses above, so we can build a dropdown from it.
+export const VEHICLE_STATUSES: VehicleStatus[] = ["PROJECT", "DAILY", "SOLD"];
+
 export type ModificationCategory =
   | "ENGINE"
   | "EXHAUST"
@@ -30,6 +38,7 @@ export interface VehicleRequest {
   model: string;
   year: number;
   engineCode: string;
+  status: VehicleStatus;
   notes?: string;
 }
 
@@ -57,6 +66,7 @@ export interface VehicleResponse {
   model: string;
   year: number;
   engineCode: string;
+  status: VehicleStatus;
   notes?: string;
   createdAt: string;
 }

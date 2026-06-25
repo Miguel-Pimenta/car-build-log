@@ -21,6 +21,7 @@ public class VehicleMapper {
     vehicle.setModel(request.model());
     vehicle.setYear(request.year());
     vehicle.setEngineCode(request.engineCode());
+    vehicle.setStatus(request.status());
     vehicle.setNotes(request.notes());
   }
 
@@ -31,6 +32,7 @@ public class VehicleMapper {
         vehicle.getModel(),
         vehicle.getYear(),
         vehicle.getEngineCode(),
+        vehicle.getStatus(),
         vehicle.getNotes(),
         vehicle.getCreatedAt());
   }
