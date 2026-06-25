@@ -1,7 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { VEHICLE_STATUSES, VehicleRequest, VehicleStatus } from "@/lib/types";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { VEHICLE_STATUSES, type VehicleRequest } from "@/lib/types";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,125 +23,191 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// A reusable form for BOTH creating and editing a vehicle.
-// It receives three props from its parent:
-//   initialValue - pre-fill the fields (used when editing); undefined when adding
-//   onSubmit     - a function the parent gives us to run when the form is submitted
-//   submitLabel  - the text on the button
+const vehicleSchema = z.object({
+  make: z.string().min(1, "Make is required").max(100),
+  model: z.string().min(1, "Model is required").max(100),
+
+  year: z.coerce
+    .number({ message: "Year must be a number" })
+    .int("Year must be a whole number")
+    .min(1900, "Year must be 1900 or later")
+    .max(2100, "Year must be 2100 or earlier"),
+
+  engineCode: z.string().min(1, "Engine code is required").max(50),
+
+  status: z.enum(["PROJECT", "DAILY", "SOLD"] as const),
+
+  notes: z
+    .string()
+    .max(2000, "Notes must be 2000 characters or fewer")
+    .optional()
+    .transform((v) => (v === "" ? undefined : v)),
+});
+
+type VehicleFormInput = z.input<typeof vehicleSchema>;
+
+type VehicleFormOutput = z.output<typeof vehicleSchema>;
+
+interface VehicleFormProps {
+  initialValue?: VehicleRequest;
+  onSubmit: (data: VehicleRequest) => Promise<void>;
+  submitLabel: string;
+}
+
 export default function VehicleForm({
   initialValue,
   onSubmit,
   submitLabel,
-}: {
-  initialValue?: VehicleRequest;
-  onSubmit: (data: VehicleRequest) => Promise<void>;
-  submitLabel: string;
-}) {
-  // "Controlled inputs": each field's value lives in state, and the input shows it.
-  const [make, setMake] = useState(initialValue?.make ?? "");
-  const [model, setModel] = useState(initialValue?.model ?? "");
-  const [year, setYear] = useState(initialValue?.year?.toString() ?? "");
-  const [engineCode, setEngineCode] = useState(initialValue?.engineCode ?? "");
-  // Status is one of a fixed set, so new vehicles default to PROJECT.
-  const [status, setStatus] = useState<VehicleStatus>(
-    initialValue?.status ?? "PROJECT",
-  );
-  const [notes, setNotes] = useState(initialValue?.notes ?? "");
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
+}: VehicleFormProps) {
+  const [submitError, setSubmitError] = useState("");
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault(); // stop the browser reloading the page on submit
-    setSaving(true);
-    setError("");
+  const form = useForm<VehicleFormInput>({
+    resolver: zodResolver(vehicleSchema),
+    defaultValues: {
+      make: initialValue?.make ?? "",
+      model: initialValue?.model ?? "",
+      year: initialValue?.year !== undefined ? String(initialValue.year) : "",
+      engineCode: initialValue?.engineCode ?? "",
+      status: initialValue?.status ?? "PROJECT",
+      notes: initialValue?.notes ?? "",
+    },
+  });
+
+  async function handleValidSubmit(values: VehicleFormOutput) {
+    setSubmitError("");
     try {
-      await onSubmit({
-        make,
-        model,
-        year: Number(year), // inputs are always text, so convert to a number
-        engineCode,
-        status,
-        notes: notes || undefined,
-      });
-      // On success the parent navigates away, so there's nothing else to do here.
+      await onSubmit(values as VehicleRequest);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-      setSaving(false);
+      setSubmitError(
+        err instanceof Error ? err.message : "Something went wrong",
+      );
     }
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-3 bg-white border rounded p-4"
-    >
-      {error && <p className="text-red-600">{error}</p>}
-      <Field label="Make" value={make} onChange={setMake} />
-      <Field label="Model" value={model} onChange={setModel} />
-      <Field label="Year" type="number" value={year} onChange={setYear} />
-      <Field label="Engine code" value={engineCode} onChange={setEngineCode} />
-
-      {/* shadcn Select replaces the native <select>.
-          The Radix Select is a *controlled* component:
-            - `value`         → the currently selected option (from state)
-            - `onValueChange` → called with the new value when user picks one
-          This is slightly different from a native <select onChange={e => ...}>
-          because Radix passes the value string directly (no event object). */}
-      <div className="flex flex-col gap-1">
-        <label
-          htmlFor="status-select"
-          className="text-sm font-medium"
-        >
-          Status
-        </label>
-        <Select value={status} onValueChange={(v) => setStatus(v as VehicleStatus)}>
-          <SelectTrigger id="status-select" className="w-full">
-            <SelectValue placeholder="Select status" />
-          </SelectTrigger>
-          <SelectContent>
-            {VEHICLE_STATUSES.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <Field label="Notes" value={notes} onChange={setNotes} />
-      <button
-        type="submit"
-        disabled={saving}
-        className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(
+          handleValidSubmit as Parameters<typeof form.handleSubmit>[0],
+        )}
+        className="space-y-4 bg-white border rounded p-4"
       >
-        {saving ? "Saving…" : submitLabel}
-      </button>
-    </form>
-  );
-}
+        {submitError && (
+          <p className="text-sm font-medium text-destructive">{submitError}</p>
+        )}
 
-// A small helper component for one labelled text input, so the form above stays
-// short. It's only used here, so it lives in the same file.
-function Field({
-  label,
-  value,
-  onChange,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="block text-sm font-medium mb-1">{label}</span>
-      <input
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full border rounded px-3 py-2"
-      />
-    </label>
+        <FormField
+          control={form.control}
+          name="make"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Make</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. Toyota" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="model"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Model</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. Supra" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="year"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Year</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="e.g. 1993"
+                  name={field.name}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
+                  disabled={field.disabled}
+                  value={field.value !== undefined ? String(field.value) : ""}
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="engineCode"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Engine code</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. 2JZ-GTE" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <FormControl>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VEHICLE_STATUSES.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl>
+                <textarea
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Optional notes about this vehicle…"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? "Saving…" : submitLabel}
+        </Button>
+      </form>
+    </Form>
   );
 }
