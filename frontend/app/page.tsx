@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getVehicles } from "@/lib/api";
+import StatusBadge from "@/components/StatusBadge";
 import type { VehicleResponse } from "@/lib/types";
 
 export default function HomePage() {
@@ -71,9 +72,12 @@ export default function HomePage() {
                 href={`/vehicles/${vehicle.id}`}
                 className="block bg-white border rounded p-4 hover:shadow"
               >
-                <p className="font-semibold">
-                  {vehicle.year} {vehicle.make} {vehicle.model}
-                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-semibold">
+                    {vehicle.year} {vehicle.make} {vehicle.model}
+                  </p>
+                  <StatusBadge status={vehicle.status} />
+                </div>
                 <p className="text-sm text-gray-500">{vehicle.engineCode}</p>
               </Link>
             </li>

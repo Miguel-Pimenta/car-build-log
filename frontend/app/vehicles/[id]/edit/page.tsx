@@ -23,6 +23,7 @@ export default function EditVehiclePage() {
           model: v.model,
           year: v.year,
           engineCode: v.engineCode,
+          status: v.status,
           notes: v.notes,
         }),
       )

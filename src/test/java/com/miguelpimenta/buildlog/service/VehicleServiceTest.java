@@ -12,6 +12,7 @@ import com.miguelpimenta.buildlog.dto.VehicleResponse;
 import com.miguelpimenta.buildlog.exception.ResourceNotFoundException;
 import com.miguelpimenta.buildlog.mapper.VehicleMapper;
 import com.miguelpimenta.buildlog.model.Vehicle;
+import com.miguelpimenta.buildlog.model.VehicleStatus;
 import com.miguelpimenta.buildlog.repository.VehicleRepository;
 import java.util.List;
 import java.util.Optional;
@@ -50,12 +51,14 @@ class VehicleServiceTest {
             });
 
     VehicleRequest request =
-        new VehicleRequest("Volkswagen", "Golf", 2015, "EA288", "daily driver");
+        new VehicleRequest(
+            "Volkswagen", "Golf", 2015, "EA288", VehicleStatus.PROJECT, "daily driver");
     VehicleResponse response = vehicleService.create(request);
 
     assertThat(response.id()).isNotNull();
     assertThat(response.make()).isEqualTo("Volkswagen");
     assertThat(response.engineCode()).isEqualTo("EA288");
+    assertThat(response.status()).isEqualTo(VehicleStatus.PROJECT);
   }
 
   @Test
@@ -89,13 +92,15 @@ class VehicleServiceTest {
     existing.setEngineCode("CBFA");
     when(vehicleRepository.findById(id)).thenReturn(Optional.of(existing));
 
-    VehicleRequest request = new VehicleRequest("Volkswagen", "Golf R", 2018, "EA888", null);
+    VehicleRequest request =
+        new VehicleRequest("Volkswagen", "Golf R", 2018, "EA888", VehicleStatus.DAILY, null);
     VehicleResponse response = vehicleService.update(id, request);
 
     assertThat(response.make()).isEqualTo("Volkswagen");
     assertThat(response.model()).isEqualTo("Golf R");
     assertThat(response.year()).isEqualTo(2018);
     assertThat(response.engineCode()).isEqualTo("EA888");
+    assertThat(response.status()).isEqualTo(VehicleStatus.DAILY);
   }
 
   @Test

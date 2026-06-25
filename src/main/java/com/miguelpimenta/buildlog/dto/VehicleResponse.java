@@ -1,5 +1,6 @@
 package com.miguelpimenta.buildlog.dto;
 
+import com.miguelpimenta.buildlog.model.VehicleStatus;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -10,5 +11,6 @@ public record VehicleResponse(
     String model,
     int year,
     String engineCode,
+    VehicleStatus status,
     String notes,
     Instant createdAt) {}

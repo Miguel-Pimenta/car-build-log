@@ -1,7 +1,7 @@
 "use client";
 
+import { VEHICLE_STATUSES, VehicleRequest, VehicleStatus } from "@/lib/types";
 import { useState } from "react";
-import type { VehicleRequest } from "@/lib/types";
 
 // A reusable form for BOTH creating and editing a vehicle.
 // It receives three props from its parent:
@@ -22,6 +22,10 @@ export default function VehicleForm({
   const [model, setModel] = useState(initialValue?.model ?? "");
   const [year, setYear] = useState(initialValue?.year?.toString() ?? "");
   const [engineCode, setEngineCode] = useState(initialValue?.engineCode ?? "");
+  // Status is one of a fixed set, so new vehicles default to PROJECT.
+  const [status, setStatus] = useState<VehicleStatus>(
+    initialValue?.status ?? "PROJECT",
+  );
   const [notes, setNotes] = useState(initialValue?.notes ?? "");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -36,6 +40,7 @@ export default function VehicleForm({
         model,
         year: Number(year), // inputs are always text, so convert to a number
         engineCode,
+        status,
         notes: notes || undefined,
       });
       // On success the parent navigates away, so there's nothing else to do here.
@@ -55,6 +60,24 @@ export default function VehicleForm({
       <Field label="Model" value={model} onChange={setModel} />
       <Field label="Year" type="number" value={year} onChange={setYear} />
       <Field label="Engine code" value={engineCode} onChange={setEngineCode} />
+
+      {/* A controlled <select> - same pattern as the category dropdown on the
+          detail page. `value` shows the current status; onChange updates it. */}
+      <label className="block">
+        <span className="block text-sm font-medium mb-1">Status</span>
+        <select
+          value={status}
+          onChange={(event) => setStatus(event.target.value as VehicleStatus)}
+          className="w-full border rounded px-3 py-2"
+        >
+          {VEHICLE_STATUSES.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <Field label="Notes" value={notes} onChange={setNotes} />
       <button
         type="submit"
