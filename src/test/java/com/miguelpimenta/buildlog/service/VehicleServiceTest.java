@@ -30,7 +30,8 @@ import org.springframework.data.domain.Pageable;
 @ExtendWith(MockitoExtension.class)
 class VehicleServiceTest {
 
-  @Mock VehicleRepository vehicleRepository;
+  @Mock
+  VehicleRepository vehicleRepository;
 
   VehicleService vehicleService;
 
@@ -50,9 +51,8 @@ class VehicleServiceTest {
               return v;
             });
 
-    VehicleRequest request =
-        new VehicleRequest(
-            "Volkswagen", "Golf", 2015, "EA288", VehicleStatus.PROJECT, "daily driver");
+    VehicleRequest request = new VehicleRequest(
+        "Volkswagen", "Golf", 2015, "EA288", VehicleStatus.PROJECT, "daily driver");
     VehicleResponse response = vehicleService.create(request);
 
     assertThat(response.id()).isNotNull();
@@ -92,8 +92,7 @@ class VehicleServiceTest {
     existing.setEngineCode("CBFA");
     when(vehicleRepository.findById(id)).thenReturn(Optional.of(existing));
 
-    VehicleRequest request =
-        new VehicleRequest("Volkswagen", "Golf R", 2018, "EA888", VehicleStatus.DAILY, null);
+    VehicleRequest request = new VehicleRequest("Volkswagen", "Golf R", 2018, "EA888", VehicleStatus.DAILY, null);
     VehicleResponse response = vehicleService.update(id, request);
 
     assertThat(response.make()).isEqualTo("Volkswagen");
@@ -114,11 +113,11 @@ class VehicleServiceTest {
     vehicle.setEngineCode("EA288");
 
     // Surrounding whitespace is trimmed, and the same term feeds both conditions.
-    when(vehicleRepository.findByMakeContainingIgnoreCaseOrModelContainingIgnoreCase(
-            "Vol", "Vol", pageable))
+    when(vehicleRepository.search(
+        "Vol", VehicleStatus.DAILY, pageable))
         .thenReturn(new PageImpl<>(List.of(vehicle)));
 
-    Page<VehicleResponse> result = vehicleService.list("  Vol  ", pageable);
+    Page<VehicleResponse> result = vehicleService.list("  Vol  ", VehicleStatus.DAILY, pageable);
 
     assertThat(result).hasSize(1);
     assertThat(result.getContent().get(0).make()).isEqualTo("Volkswagen");
@@ -126,7 +125,7 @@ class VehicleServiceTest {
   }
 
   @Test
-  void listWithoutSearchTermReturnsAll() {
+  void listWithoutAnyFilterQueriesWithNulls() {
     Pageable pageable = PageRequest.of(0, 20);
     Vehicle vehicle = new Vehicle();
     vehicle.setId(UUID.randomUUID());
@@ -135,26 +134,50 @@ class VehicleServiceTest {
     vehicle.setYear(2010);
     vehicle.setEngineCode("S54");
 
-    when(vehicleRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(vehicle)));
+    // No search and no status: the service passes null for both and the @Query
+    // handles "filter absent" itself, so findAll is never used.
+    when(vehicleRepository.search(null, null, pageable))
+        .thenReturn(new PageImpl<>(List.of(vehicle)));
 
-    Page<VehicleResponse> result = vehicleService.list(null, pageable);
+    Page<VehicleResponse> result = vehicleService.list(null, null, pageable);
 
     assertThat(result).hasSize(1);
     assertThat(result.getContent().get(0).model()).isEqualTo("M3");
-    verify(vehicleRepository, never())
-        .findByMakeContainingIgnoreCaseOrModelContainingIgnoreCase(any(), any(), any());
+    verify(vehicleRepository, never()).findAll(any(Pageable.class));
   }
 
   @Test
-  void listWithBlankSearchTermReturnsAll() {
+  void listWithBlankSearchNormalisesToNull() {
     Pageable pageable = PageRequest.of(0, 20);
-    when(vehicleRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of()));
+    // Whitespace-only search is blank, so the service normalises it to null
+    // (not " ") before querying.
+    when(vehicleRepository.search(null, null, pageable))
+        .thenReturn(new PageImpl<>(List.of()));
 
-    // Whitespace-only counts as blank (isBlank), so it must NOT hit the search query.
-    vehicleService.list("   ", pageable);
+    vehicleService.list("   ", null, pageable);
 
-    verify(vehicleRepository).findAll(pageable);
-    verify(vehicleRepository, never())
-        .findByMakeContainingIgnoreCaseOrModelContainingIgnoreCase(any(), any(), any());
+    verify(vehicleRepository).search(null, null, pageable);
+    verify(vehicleRepository, never()).findAll(any(Pageable.class));
+  }
+
+  @Test
+  void listWithStatusOnlyQueriesByStatus() {
+    Pageable pageable = PageRequest.of(0, 20);
+    Vehicle vehicle = new Vehicle();
+    vehicle.setId(UUID.randomUUID());
+    vehicle.setMake("Toyota");
+    vehicle.setModel("Supra");
+    vehicle.setYear(1998);
+    vehicle.setEngineCode("2JZ-GTE");
+
+    // No search term, just a status filter -> search(null, SOLD, pageable).
+    when(vehicleRepository.search(null, VehicleStatus.SOLD, pageable))
+        .thenReturn(new PageImpl<>(List.of(vehicle)));
+
+    Page<VehicleResponse> result = vehicleService.list(null, VehicleStatus.SOLD, pageable);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getContent().get(0).model()).isEqualTo("Supra");
+    verify(vehicleRepository, never()).findAll(any(Pageable.class));
   }
 }

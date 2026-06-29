@@ -5,17 +5,26 @@ import Link from "next/link";
 import { useVehicles } from "@/hooks/use-vehicles";
 import StatusBadge from "@/components/StatusBadge";
 import { useDebounce } from "@/hooks/use-debounce";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { VEHICLE_STATUSES, VehicleStatus } from "@/lib/types";
 
 export default function HomePage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
+  const [status, setStatus] = useState<VehicleStatus | "ALL">("ALL");
 
   const {
     data: vehicles,
     isLoading,
     isError,
     error,
-  } = useVehicles(debouncedSearch);
+  } = useVehicles(debouncedSearch, status === "ALL" ? undefined : status);
 
   return (
     <div>
@@ -28,6 +37,23 @@ export default function HomePage() {
           + Add vehicle
         </Link>
       </div>
+
+      <Select
+        value={status}
+        onValueChange={(v) => setStatus(v as VehicleStatus | "ALL")}
+      >
+        <SelectTrigger className="w-48 mb-4">
+          <SelectValue /> {/* shows the current selection */}
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">All Statuses</SelectItem>
+          {VEHICLE_STATUSES.map((s) => (
+            <SelectItem key={s} value={s}>
+              {s}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       <input
         placeholder="Search by make or model…"
@@ -45,8 +71,8 @@ export default function HomePage() {
         <p>Loading…</p>
       ) : vehicles?.length === 0 ? (
         <p className="text-gray-500">
-          {debouncedSearch
-            ? `No vehicles match "${debouncedSearch}".`
+          {debouncedSearch || status !== "ALL"
+            ? "No vehicles match your filters."
             : "No vehicles yet. Add your first one!"}
         </p>
       ) : (
