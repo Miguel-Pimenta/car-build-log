@@ -3,6 +3,7 @@ package com.miguelpimenta.buildlog.controller;
 import com.miguelpimenta.buildlog.dto.VehicleRequest;
 import com.miguelpimenta.buildlog.dto.VehicleResponse;
 import com.miguelpimenta.buildlog.exception.PageResponse;
+import com.miguelpimenta.buildlog.model.VehicleStatus;
 import com.miguelpimenta.buildlog.service.VehicleService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -34,19 +35,19 @@ public class VehicleController {
   @PostMapping
   public ResponseEntity<VehicleResponse> create(@Valid @RequestBody VehicleRequest request) {
     VehicleResponse created = vehicleService.create(request);
-    URI location =
-        ServletUriComponentsBuilder.fromCurrentRequest()
-            .path("/{id}")
-            .buildAndExpand(created.id())
-            .toUri();
+    URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+        .path("/{id}")
+        .buildAndExpand(created.id())
+        .toUri();
     return ResponseEntity.created(location).body(created);
   }
 
   @GetMapping
   public PageResponse<VehicleResponse> list(
       @PageableDefault(size = 20) Pageable pageable,
-      @RequestParam(required = false) String search) {
-    return PageResponse.from(vehicleService.list(search, pageable));
+      @RequestParam(required = false) String search,
+      @RequestParam(required = false) VehicleStatus status) {
+    return PageResponse.from(vehicleService.list(search, status, pageable));
   }
 
   @GetMapping("/{id}")

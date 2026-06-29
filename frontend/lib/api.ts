@@ -6,6 +6,7 @@ import type {
   PageResponse,
   VehicleRequest,
   VehicleResponse,
+  VehicleStatus,
   VehicleSummaryResponse,
 } from "./types";
 
@@ -30,10 +31,13 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 // ---- Vehicles ----
 
-export function getVehicles(search?: string) {
+export function getVehicles(search?: string, status?: VehicleStatus) {
   let path = "/vehicles?page=0&size=100";
   if (search && search.trim() !== "") {
     path += `&search=${encodeURIComponent(search.trim())}`;
+  }
+  if (status) {
+    path += `&status=${status}`;
   }
   return request<PageResponse<VehicleResponse>>(path);
 }

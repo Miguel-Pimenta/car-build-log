@@ -5,6 +5,7 @@ import com.miguelpimenta.buildlog.dto.VehicleResponse;
 import com.miguelpimenta.buildlog.exception.ResourceNotFoundException;
 import com.miguelpimenta.buildlog.mapper.VehicleMapper;
 import com.miguelpimenta.buildlog.model.Vehicle;
+import com.miguelpimenta.buildlog.model.VehicleStatus;
 import com.miguelpimenta.buildlog.repository.VehicleRepository;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -30,14 +31,9 @@ public class VehicleService {
     return vehicleMapper.toResponse(saved);
   }
 
-  public Page<VehicleResponse> list(String search, Pageable pageable) {
-    if (search != null && !search.isBlank()) {
-      String term = search.trim();
-      return vehicleRepository
-          .findByMakeContainingIgnoreCaseOrModelContainingIgnoreCase(term, term, pageable)
-          .map(vehicleMapper::toResponse);
-    }
-    return vehicleRepository.findAll(pageable).map(vehicleMapper::toResponse);
+  public Page<VehicleResponse> list(String search, VehicleStatus status, Pageable pageable) {
+    String term = (search != null && !search.isBlank()) ? search.trim() : null;
+    return vehicleRepository.search(term, status, pageable).map(vehicleMapper::toResponse);
   }
 
   public VehicleResponse get(UUID id) {
@@ -61,7 +57,8 @@ public class VehicleService {
   }
 
   /**
-   * Loads a vehicle or throws 404. Shared with the modification, dyno and summary services so the
+   * Loads a vehicle or throws 404. Shared with the modification, dyno and summary
+   * services so the
    * not-found behaviour lives in one place.
    */
   public Vehicle getEntity(UUID id) {
