@@ -29,3 +29,10 @@ management:
 
 server:
   port: 8080
+
+app:
+  jwt:
+    # Dev default only. MUST be overridden in production via the APP_JWT_SECRET env
+    # var. HS256 requires a key of at least 32 bytes (256 bits).
+    secret: ${APP_JWT_SECRET:change-me-in-prod-this-is-a-dev-only-secret-key-0123456789}
+    expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000}

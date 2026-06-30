@@ -57,8 +57,7 @@ public class VehicleService {
   }
 
   /**
-   * Loads a vehicle or throws 404. Shared with the modification, dyno and summary
-   * services so the
+   * Loads a vehicle or throws 404. Shared with the modification, dyno and summary services so the
    * not-found behaviour lives in one place.
    */
   public Vehicle getEntity(UUID id) {
