@@ -30,8 +30,7 @@ import org.springframework.data.domain.Pageable;
 @ExtendWith(MockitoExtension.class)
 class VehicleServiceTest {
 
-  @Mock
-  VehicleRepository vehicleRepository;
+  @Mock VehicleRepository vehicleRepository;
 
   VehicleService vehicleService;
 
@@ -51,8 +50,9 @@ class VehicleServiceTest {
               return v;
             });
 
-    VehicleRequest request = new VehicleRequest(
-        "Volkswagen", "Golf", 2015, "EA288", VehicleStatus.PROJECT, "daily driver");
+    VehicleRequest request =
+        new VehicleRequest(
+            "Volkswagen", "Golf", 2015, "EA288", VehicleStatus.PROJECT, "daily driver");
     VehicleResponse response = vehicleService.create(request);
 
     assertThat(response.id()).isNotNull();
@@ -92,7 +92,8 @@ class VehicleServiceTest {
     existing.setEngineCode("CBFA");
     when(vehicleRepository.findById(id)).thenReturn(Optional.of(existing));
 
-    VehicleRequest request = new VehicleRequest("Volkswagen", "Golf R", 2018, "EA888", VehicleStatus.DAILY, null);
+    VehicleRequest request =
+        new VehicleRequest("Volkswagen", "Golf R", 2018, "EA888", VehicleStatus.DAILY, null);
     VehicleResponse response = vehicleService.update(id, request);
 
     assertThat(response.make()).isEqualTo("Volkswagen");
@@ -113,8 +114,7 @@ class VehicleServiceTest {
     vehicle.setEngineCode("EA288");
 
     // Surrounding whitespace is trimmed, and the same term feeds both conditions.
-    when(vehicleRepository.search(
-        "Vol", VehicleStatus.DAILY, pageable))
+    when(vehicleRepository.search("Vol", VehicleStatus.DAILY, pageable))
         .thenReturn(new PageImpl<>(List.of(vehicle)));
 
     Page<VehicleResponse> result = vehicleService.list("  Vol  ", VehicleStatus.DAILY, pageable);
@@ -151,8 +151,7 @@ class VehicleServiceTest {
     Pageable pageable = PageRequest.of(0, 20);
     // Whitespace-only search is blank, so the service normalises it to null
     // (not " ") before querying.
-    when(vehicleRepository.search(null, null, pageable))
-        .thenReturn(new PageImpl<>(List.of()));
+    when(vehicleRepository.search(null, null, pageable)).thenReturn(new PageImpl<>(List.of()));
 
     vehicleService.list("   ", null, pageable);
 

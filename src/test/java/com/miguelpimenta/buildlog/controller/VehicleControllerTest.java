@@ -11,31 +11,49 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.miguelpimenta.buildlog.config.SecurityConfig;
 import com.miguelpimenta.buildlog.dto.VehicleResponse;
 import com.miguelpimenta.buildlog.exception.ResourceNotFoundException;
 import com.miguelpimenta.buildlog.model.VehicleStatus;
+import com.miguelpimenta.buildlog.security.CustomUserDetailsService;
+import com.miguelpimenta.buildlog.security.JwtAuthenticationFilter;
+import com.miguelpimenta.buildlog.security.JwtService;
 import com.miguelpimenta.buildlog.service.VehicleService;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * Web-layer slice test: validation, status codes, the Location header and the error-body shape. The
  * service is mocked, so no database (or Docker) is needed.
+ *
+ * <p>{@link SecurityConfig} is imported so the real (stateless JWT) filter chain is exercised. The
+ * security collaborators it depends on are mocked, and most tests run as an authenticated user via
+ * {@link WithMockUser}; one test deliberately omits it to assert the 401 path.
  */
 @WebMvcTest(VehicleController.class)
+@Import({SecurityConfig.class, JwtAuthenticationFilter.class})
 class VehicleControllerTest {
 
   @Autowired MockMvc mockMvc;
 
   @MockitoBean VehicleService vehicleService;
 
+  // The real JwtAuthenticationFilter is imported (so the chain actually passes the request
+  // through); its collaborators are mocked. With no Authorization header the filter is a no-op,
+  // and @WithMockUser supplies the authentication for the authenticated tests.
+  @MockitoBean JwtService jwtService;
+  @MockitoBean CustomUserDetailsService userDetailsService;
+
   @Test
+  @WithMockUser
   void createReturns201WithLocationHeader() throws Exception {
     UUID id = UUID.randomUUID();
     when(vehicleService.create(any()))
@@ -65,6 +83,7 @@ class VehicleControllerTest {
   }
 
   @Test
+  @WithMockUser
   void createRejectsInvalidPayloadWith400AndFieldErrors() throws Exception {
     mockMvc
         .perform(
@@ -82,6 +101,7 @@ class VehicleControllerTest {
   }
 
   @Test
+  @WithMockUser
   void getReturns404WithErrorBodyWhenMissing() throws Exception {
     UUID id = UUID.randomUUID();
     when(vehicleService.get(id)).thenThrow(ResourceNotFoundException.of("Vehicle", id));
@@ -94,9 +114,15 @@ class VehicleControllerTest {
   }
 
   @Test
+  @WithMockUser
   void deleteReturns204() throws Exception {
     UUID id = UUID.randomUUID();
 
     mockMvc.perform(delete("/api/v1/vehicles/{id}", id)).andExpect(status().isNoContent());
+  }
+
+  @Test
+  void unauthenticatedRequestToProtectedEndpointReturns401() throws Exception {
+    mockMvc.perform(get("/api/v1/vehicles")).andExpect(status().isUnauthorized());
   }
 }
