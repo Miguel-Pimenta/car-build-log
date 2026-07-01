@@ -30,6 +30,7 @@ public class JwtService {
   public String generateToken(String username) {
     Date now = new Date();
     Date expiration = new Date(now.getTime() + expirationMs);
+
     return Jwts.builder()
         .subject(username)
         .issuedAt(now)

@@ -66,6 +66,7 @@ class VehicleControllerTest {
                 "EA288",
                 VehicleStatus.PROJECT,
                 null,
+                null,
                 Instant.now()));
 
     mockMvc

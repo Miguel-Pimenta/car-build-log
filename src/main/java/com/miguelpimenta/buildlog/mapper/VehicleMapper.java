@@ -34,6 +34,7 @@ public class VehicleMapper {
         vehicle.getEngineCode(),
         vehicle.getStatus(),
         vehicle.getNotes(),
+        vehicle.getOwner().getUsername(),
         vehicle.getCreatedAt());
   }
 }
