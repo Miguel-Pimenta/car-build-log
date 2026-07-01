@@ -21,7 +21,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A single modification made to a {@link Vehicle} - e.g. "Stage 1 remap". Many modifications belong
+ * A single modification made to a {@link Vehicle} - e.g. "Stage 1 remap". Many
+ * modifications belong
  * to one vehicle.
  */
 @Entity
@@ -34,10 +35,6 @@ public class Modification {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
-
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "vehicle_id", nullable = false)
-  private Vehicle vehicle;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 32)
@@ -60,6 +57,10 @@ public class Modification {
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
+
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "vehicle_id", nullable = false)
+  private Vehicle vehicle;
 
   @PrePersist
   void onCreate() {

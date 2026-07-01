@@ -13,4 +13,5 @@ public record VehicleResponse(
     String engineCode,
     VehicleStatus status,
     String notes,
+    String owner,
     Instant createdAt) {}

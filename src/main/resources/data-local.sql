@@ -3,19 +3,26 @@
 -- create-drop, so the tables are empty on every boot and these inserts run
 -- fresh each time -- no duplicates to worry about.
 --
--- NOTE: created_at and status are NOT NULL and are normally populated by the JPA
--- entity (@PrePersist / the mapper). Neither runs for raw SQL inserts, so both
--- are set explicitly here.
+-- NOTE: created_at / status / owner are NOT NULL and are normally populated by
+-- the JPA entity or service. None of that runs for raw SQL inserts, so they are
+-- set explicitly here.
 
-INSERT INTO vehicles (id, make, model, model_year, engine_code, status, notes, created_at) VALUES
-  ('11111111-1111-1111-1111-111111111111', 'Volkswagen', 'Golf GTI',        2008, 'BWA',      'PROJECT', 'Mk5 project car', CURRENT_TIMESTAMP),
-  ('22222222-2222-2222-2222-222222222222', 'Volkswagen', 'Polo',            2012, 'CGGB',     'DAILY',   'Daily driver',    CURRENT_TIMESTAMP),
-  ('33333333-3333-3333-3333-333333333333', 'BMW',        'M3',              2005, 'S54',      'PROJECT', 'E46 track build', CURRENT_TIMESTAMP),
-  ('44444444-4444-4444-4444-444444444444', 'Honda',      'Civic Type R',    2007, 'K20Z4',    'SOLD',    'FN2',             CURRENT_TIMESTAMP),
-  ('55555555-5555-5555-5555-555555555555', 'Subaru',     'Impreza WRX STI', 2006, 'EJ257',    'PROJECT', 'Hawkeye',         CURRENT_TIMESTAMP),
-  ('66666666-6666-6666-6666-666666666666', 'Toyota',     'Supra',           1998, '2JZ-GTE',  'SOLD',    'MkIV',            CURRENT_TIMESTAMP),
-  ('77777777-7777-7777-7777-777777777777', 'Nissan',     'Skyline GT-R',    1999, 'RB26DETT', 'PROJECT', 'R34',             CURRENT_TIMESTAMP),
-  ('88888888-8888-8888-8888-888888888888', 'Ford',       'Focus RS',        2017, 'EcoBoost', 'DAILY',   'Mk3',             CURRENT_TIMESTAMP);
+-- A demo user that owns all the sample cars. Log in as username "demo",
+-- password "password123" to see this garage. The password is a BCrypt hash.
+INSERT INTO users (id, name, email, username, password_hash, role) VALUES
+  ('99999999-9999-9999-9999-999999999999', 'Demo User', 'demo@example.com', 'demo',
+   '$2a$10$fG5uO/aSbTqDUUIwA1yRX.6uCTOIYKk.XAlRvVfiI0tU2MGSyeIjS', 'USER');
+
+-- Every car is owned by the demo user (owner_id references users.id above).
+INSERT INTO vehicles (id, owner_id, make, model, model_year, engine_code, status, notes, created_at) VALUES
+  ('11111111-1111-1111-1111-111111111111', '99999999-9999-9999-9999-999999999999', 'Volkswagen', 'Golf GTI',        2008, 'BWA',      'PROJECT', 'Mk5 project car', CURRENT_TIMESTAMP),
+  ('22222222-2222-2222-2222-222222222222', '99999999-9999-9999-9999-999999999999', 'Volkswagen', 'Polo',            2012, 'CGGB',     'DAILY',   'Daily driver',    CURRENT_TIMESTAMP),
+  ('33333333-3333-3333-3333-333333333333', '99999999-9999-9999-9999-999999999999', 'BMW',        'M3',              2005, 'S54',      'PROJECT', 'E46 track build', CURRENT_TIMESTAMP),
+  ('44444444-4444-4444-4444-444444444444', '99999999-9999-9999-9999-999999999999', 'Honda',      'Civic Type R',    2007, 'K20Z4',    'SOLD',    'FN2',             CURRENT_TIMESTAMP),
+  ('55555555-5555-5555-5555-555555555555', '99999999-9999-9999-9999-999999999999', 'Subaru',     'Impreza WRX STI', 2006, 'EJ257',    'PROJECT', 'Hawkeye',         CURRENT_TIMESTAMP),
+  ('66666666-6666-6666-6666-666666666666', '99999999-9999-9999-9999-999999999999', 'Toyota',     'Supra',           1998, '2JZ-GTE',  'SOLD',    'MkIV',            CURRENT_TIMESTAMP),
+  ('77777777-7777-7777-7777-777777777777', '99999999-9999-9999-9999-999999999999', 'Nissan',     'Skyline GT-R',    1999, 'RB26DETT', 'PROJECT', 'R34',             CURRENT_TIMESTAMP),
+  ('88888888-8888-8888-8888-888888888888', '99999999-9999-9999-9999-999999999999', 'Ford',       'Focus RS',        2017, 'EcoBoost', 'DAILY',   'Mk3',             CURRENT_TIMESTAMP);
 
 -- A couple of vehicles get modifications + dyno results so the build-summary
 -- endpoint has something interesting to return.
