@@ -9,10 +9,12 @@ import com.miguelpimenta.buildlog.model.Vehicle;
 import com.miguelpimenta.buildlog.repository.ModificationRepository;
 import java.util.List;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 // Read-only transactions by default; write methods below opt in with a plain
 // @Transactional.
 @Transactional(readOnly = true)
@@ -38,12 +40,14 @@ public class ModificationService {
     Vehicle vehicle = vehicleService.getEntity(vehicleId);
     Modification saved = modificationRepository.save(modificationMapper.toEntity(request, vehicle));
 
+    log.info("Added modification {} to vehicle {}", saved.getId(), vehicleId);
     return modificationMapper.toResponse(saved);
   }
 
   public List<ModificationResponse> listForVehicle(UUID vehicleId) {
     vehicleService.getEntity(vehicleId);
 
+    log.info("Listing modifications for vehicle {}", vehicleId);
     return modificationRepository.findByVehicleId(vehicleId).stream()
         .map(modificationMapper::toResponse)
         .toList();
@@ -55,6 +59,7 @@ public class ModificationService {
       throw ResourceNotFoundException.of("Modification", id);
     }
     modificationRepository.deleteById(id);
+    log.info("Deleted modification {}", id);
   }
 
   public ModificationResponse get(UUID id) {

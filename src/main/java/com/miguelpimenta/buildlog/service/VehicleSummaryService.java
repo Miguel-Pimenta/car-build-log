@@ -13,6 +13,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  * beyond CRUD, and the part worth unit testing thoroughly.
  */
 @Service
+@Slf4j
 @Transactional(readOnly = true)
 public class VehicleSummaryService {
 
@@ -40,6 +42,7 @@ public class VehicleSummaryService {
 
   public VehicleSummaryResponse summarise(UUID vehicleId) {
     Vehicle vehicle = vehicleService.getEntity(vehicleId); // 404 if the vehicle does not exist
+    log.info("Building summary for vehicle {}", vehicleId);
 
     List<Modification> mods = modificationRepository.findByVehicleId(vehicleId);
 

@@ -8,10 +8,12 @@ import com.miguelpimenta.buildlog.model.Vehicle;
 import com.miguelpimenta.buildlog.repository.DynoResultRepository;
 import java.util.List;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 // Read-only transactions by default; the write method below opts in with a
 // plain @Transactional.
 @Transactional(readOnly = true)
@@ -34,11 +36,13 @@ public class DynoService {
   public DynoResponse addToVehicle(UUID vehicleId, DynoRequest request) {
     Vehicle vehicle = vehicleService.getEntity(vehicleId);
     DynoResult saved = dynoResultRepository.save(dynoMapper.toEntity(request, vehicle));
+    log.info("Added dyno result {} to vehicle {}", saved.getId(), vehicleId);
     return dynoMapper.toResponse(saved);
   }
 
   public List<DynoResponse> listForVehicle(UUID vehicleId) {
     vehicleService.getEntity(vehicleId); // 404 if the vehicle does not exist
+    log.info("Listing dyno results for vehicle {}", vehicleId);
     return dynoResultRepository.findByVehicleIdOrderByMeasuredAtDesc(vehicleId).stream()
         .map(dynoMapper::toResponse)
         .toList();

@@ -10,12 +10,14 @@ import com.miguelpimenta.buildlog.model.VehicleStatus;
 import com.miguelpimenta.buildlog.repository.VehicleRepository;
 import com.miguelpimenta.buildlog.security.CurrentUserService;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j // Lombok generates a `private static final Logger log` for this class.
 // Class default: every method runs in a read-only transaction unless it
 // overrides this.
 @Transactional(readOnly = true)
@@ -44,6 +46,7 @@ public class VehicleService {
     vehicle.setOwner(currentUserService.getCurrentUser());
 
     Vehicle saved = vehicleRepository.save(vehicle);
+    log.info("Created vehicle {}: {} {}", saved.getId(), saved.getMake(), saved.getModel());
 
     return vehicleMapper.toResponse(saved);
   }
@@ -52,6 +55,7 @@ public class VehicleService {
     String term = (search != null && !search.isBlank()) ? search.trim() : null;
     User owner = currentUserService.getCurrentUser();
 
+    log.info("Listing vehicles: search={}, status={}", term, status);
     return vehicleRepository.search(term, status, owner, pageable).map(vehicleMapper::toResponse);
   }
 
@@ -63,6 +67,7 @@ public class VehicleService {
   public VehicleResponse update(UUID id, VehicleRequest request) {
     Vehicle vehicle = getEntity(id);
     vehicleMapper.apply(request, vehicle);
+    log.info("Updated vehicle {}", id);
     // Dirty checking: because getEntity loaded a managed entity, JPA detects the
     // field changes
     // and flushes an UPDATE on commit; no explicit repository.save() call is
@@ -74,6 +79,7 @@ public class VehicleService {
   public void delete(UUID id) {
     Vehicle vehicle = getEntity(id);
     vehicleRepository.delete(vehicle);
+    log.info("Deleted vehicle {}", id);
   }
 
   /**
