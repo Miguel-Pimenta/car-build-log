@@ -18,10 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * A project car being tracked in the build log. Parent of its modifications and
- * dyno results.
- */
+/** A project car being tracked in the build log. Parent of its modifications and dyno results. */
 @Entity
 @Table(name = "vehicles")
 @Getter

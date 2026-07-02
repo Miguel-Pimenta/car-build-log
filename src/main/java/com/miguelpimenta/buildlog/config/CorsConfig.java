@@ -7,17 +7,12 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Lets a browser frontend served from a different origin (e.g. the Next.js dev
- * server at
- * http://localhost:3000) call this API. Browsers block cross-origin requests
- * unless the server opts
+ * Lets a browser frontend served from a different origin (e.g. the Next.js dev server at
+ * http://localhost:3000) call this API. Browsers block cross-origin requests unless the server opts
  * in via CORS.
  *
- * <p>
- * Allowed origins are configurable through the {@code app.cors.allowed-origins}
- * property
- * (comma-separated). In production, set it to the deployed frontend URL, e.g.
- * {@code
+ * <p>Allowed origins are configurable through the {@code app.cors.allowed-origins} property
+ * (comma-separated). In production, set it to the deployed frontend URL, e.g. {@code
  * APP_CORS_ALLOWED_ORIGINS=https://your-frontend.example.com}.
  */
 @Configuration

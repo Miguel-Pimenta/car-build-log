@@ -10,8 +10,7 @@ import type {
   VehicleSummaryResponse,
 } from "./types";
 
-const BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
 
 // ---- Auth token (kept in the browser so it survives refreshes) ----
 const TOKEN_KEY = "carbuildlog.token";
@@ -124,15 +123,10 @@ export function deleteVehicle(id: string) {
 // ---- Modifications ----
 
 export function getModifications(vehicleId: string) {
-  return request<ModificationResponse[]>(
-    `/vehicles/${vehicleId}/modifications`,
-  );
+  return request<ModificationResponse[]>(`/vehicles/${vehicleId}/modifications`);
 }
 
-export function createModification(
-  vehicleId: string,
-  data: ModificationRequest,
-) {
+export function createModification(vehicleId: string, data: ModificationRequest) {
   return request<ModificationResponse>(`/vehicles/${vehicleId}/modifications`, {
     method: "POST",
     body: JSON.stringify(data),

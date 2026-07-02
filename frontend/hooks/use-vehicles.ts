@@ -1,23 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  createVehicle,
-  getVehicles,
-  getVehicle,
-  updateVehicle,
-} from "@/lib/api";
-import type {
-  VehicleRequest,
-  VehicleResponse,
-  VehicleStatus,
-} from "@/lib/types";
+import { createVehicle, getVehicles, getVehicle, updateVehicle } from "@/lib/api";
+import type { VehicleRequest, VehicleResponse, VehicleStatus } from "@/lib/types";
 
 // Query-key factory: one place that builds every cache key, so keys stay consistent
 // across reads and invalidations. All keys start with "vehicles" so invalidating
 // vehicleKeys.all (below) wipes the whole subtree in one call.
 export const vehicleKeys = {
   all: ["vehicles"] as const,
-  list: (search: string, status?: VehicleStatus) =>
-    ["vehicles", search, status] as const,
+  list: (search: string, status?: VehicleStatus) => ["vehicles", search, status] as const,
   detail: (id: string) => ["vehicles", id, "detail"] as const,
   summary: (id: string) => ["vehicles", id, "summary"] as const,
   modifications: (id: string) => ["vehicles", id, "modifications"] as const,

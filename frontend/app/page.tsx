@@ -31,21 +31,15 @@ export default function HomePage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold">My Vehicles</h1>
-        <Link
-          href="/vehicles/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
+        <Link href="/vehicles/new" className="rounded bg-blue-600 px-4 py-2 text-white">
           + Add vehicle
         </Link>
       </div>
 
-      <Select
-        value={status}
-        onValueChange={(v) => setStatus(v as VehicleStatus | "ALL")}
-      >
-        <SelectTrigger className="w-48 mb-4">
+      <Select value={status} onValueChange={(v) => setStatus(v as VehicleStatus | "ALL")}>
+        <SelectTrigger className="mb-4 w-48">
           <SelectValue /> {/* shows the current selection */}
         </SelectTrigger>
         <SelectContent>
@@ -62,14 +56,12 @@ export default function HomePage() {
         placeholder="Search by make or model…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="border rounded px-3 py-1.5 w-full mb-4"
+        className="mb-4 w-full rounded border px-3 py-1.5"
         aria-label="Search vehicles"
       />
 
       {isError ? (
-        <p className="text-red-600">
-          Could not load vehicles: {error?.message}
-        </p>
+        <p className="text-red-600">Could not load vehicles: {error?.message}</p>
       ) : isLoading ? (
         <p>Loading…</p>
       ) : vehicles?.length === 0 ? (
@@ -84,7 +76,7 @@ export default function HomePage() {
             <li key={vehicle.id}>
               <Link
                 href={`/vehicles/${vehicle.id}`}
-                className="block bg-white border rounded p-4 hover:shadow"
+                className="block rounded border bg-white p-4 hover:shadow"
               >
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-semibold">

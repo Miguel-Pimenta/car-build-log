@@ -21,8 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A single modification made to a {@link Vehicle} - e.g. "Stage 1 remap". Many
- * modifications belong
+ * A single modification made to a {@link Vehicle} - e.g. "Stage 1 remap". Many modifications belong
  * to one vehicle.
  */
 @Entity

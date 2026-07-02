@@ -37,12 +37,12 @@ and allow `http://localhost:3000` via CORS (it does by default). Then log in as 
 
 ## Scripts
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Start the dev server |
-| `npm run build` | Production build (also type-checks) |
+| Command            | What it does                                               |
+| ------------------ | ---------------------------------------------------------- |
+| `npm run dev`      | Start the dev server                                       |
+| `npm run build`    | Production build (also type-checks)                        |
 | `npx tsc --noEmit` | Type-check only — the reliable "is my code correct?" check |
-| `npm run lint` | ESLint |
+| `npm run lint`     | ESLint                                                     |
 
 > **Build note:** this repo lives under OneDrive, and the dev server holds the `.next` folder open, so
 > `npm run build` can fail with `EPERM … unlink … .next…`. It's not a code error — stop `npm run dev`

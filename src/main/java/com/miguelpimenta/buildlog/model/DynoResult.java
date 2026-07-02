@@ -18,8 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A dyno (rolling-road) measurement for a {@link Vehicle}, capturing peak power
- * and torque on a
+ * A dyno (rolling-road) measurement for a {@link Vehicle}, capturing peak power and torque on a
  * given date.
  */
 @Entity

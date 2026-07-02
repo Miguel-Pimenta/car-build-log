@@ -10,8 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
- * Creates and validates HS256 JWTs using the JJWT 0.13 API. The signing key is
- * derived from the
+ * Creates and validates HS256 JWTs using the JJWT 0.13 API. The signing key is derived from the
  * {@code app.jwt.secret} property, which must be at least 32 bytes for HS256.
  */
 @Service

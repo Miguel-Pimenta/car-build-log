@@ -15,7 +15,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
   // condition,
   // so one query serves all combinations of search/status without dynamic query
   // building.
-  @Query("""
+  @Query(
+      """
         SELECT v FROM Vehicle v
         WHERE v.owner = :owner
           AND (:status IS NULL OR v.status = :status)

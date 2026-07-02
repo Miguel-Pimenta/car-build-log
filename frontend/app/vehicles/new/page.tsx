@@ -18,7 +18,7 @@ export default function NewVehiclePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Add a vehicle</h1>
+      <h1 className="mb-4 text-2xl font-bold">Add a vehicle</h1>
       <VehicleForm onSubmit={handleCreate} submitLabel="Create vehicle" />
     </div>
   );

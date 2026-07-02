@@ -30,59 +30,54 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Create an account</h1>
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-3 bg-white border rounded p-4"
-      >
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+    <div className="mx-auto max-w-sm">
+      <h1 className="mb-4 text-2xl font-bold">Create an account</h1>
+      <form onSubmit={handleSubmit} className="space-y-3 rounded border bg-white p-4">
+        {error && <p className="text-sm text-red-600">{error}</p>}
         <label className="block">
-          <span className="block text-sm font-medium mb-1">Username</span>
+          <span className="mb-1 block text-sm font-medium">Username</span>
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full border rounded px-3 py-2"
+            className="w-full rounded border px-3 py-2"
           />
         </label>
         <label className="block">
-          <span className="block text-sm font-medium mb-1">Email</span>
+          <span className="mb-1 block text-sm font-medium">Email</span>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border rounded px-3 py-2"
+            className="w-full rounded border px-3 py-2"
           />
         </label>
         <label className="block">
-          <span className="block text-sm font-medium mb-1">Password</span>
+          <span className="mb-1 block text-sm font-medium">Password</span>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 8 characters"
-            className="w-full border rounded px-3 py-2"
+            className="w-full rounded border px-3 py-2"
           />
         </label>
         <label className="block">
-          <span className="block text-sm font-medium mb-1">
-            Name (optional)
-          </span>
+          <span className="mb-1 block text-sm font-medium">Name (optional)</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full border rounded px-3 py-2"
+            className="w-full rounded border px-3 py-2"
           />
         </label>
         <button
           type="submit"
           disabled={submitting}
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
         >
           {submitting ? "Creating…" : "Create account"}
         </button>
       </form>
-      <p className="text-sm text-gray-600 mt-3">
+      <p className="mt-3 text-sm text-gray-600">
         Already have an account?{" "}
         <Link href="/login" className="text-blue-600 hover:underline">
           Log in

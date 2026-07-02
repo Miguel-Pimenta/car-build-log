@@ -15,10 +15,7 @@ public class VehicleMapper {
     return vehicle;
   }
 
-  /**
-   * Copies request fields onto an existing (or new) entity - used for create and
-   * update.
-   */
+  /** Copies request fields onto an existing (or new) entity - used for create and update. */
   public void apply(VehicleRequest request, Vehicle vehicle) {
     vehicle.setMake(request.make());
     vehicle.setModel(request.model());

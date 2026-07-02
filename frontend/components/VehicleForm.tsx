@@ -56,11 +56,7 @@ interface VehicleFormProps {
   submitLabel: string;
 }
 
-export default function VehicleForm({
-  initialValue,
-  onSubmit,
-  submitLabel,
-}: VehicleFormProps) {
+export default function VehicleForm({ initialValue, onSubmit, submitLabel }: VehicleFormProps) {
   const [submitError, setSubmitError] = useState("");
 
   const form = useForm<VehicleFormInput>({
@@ -81,9 +77,7 @@ export default function VehicleForm({
     try {
       await onSubmit(values as VehicleRequest);
     } catch (err) {
-      setSubmitError(
-        err instanceof Error ? err.message : "Something went wrong",
-      );
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong");
     }
   }
 
@@ -92,14 +86,10 @@ export default function VehicleForm({
       <form
         // handleSubmit runs validation first and only calls our handler if the form is valid.
         // The cast reconciles the input-typed form with our output-typed (post-coerce) handler.
-        onSubmit={form.handleSubmit(
-          handleValidSubmit as Parameters<typeof form.handleSubmit>[0],
-        )}
-        className="space-y-4 bg-white border rounded p-4"
+        onSubmit={form.handleSubmit(handleValidSubmit as Parameters<typeof form.handleSubmit>[0])}
+        className="space-y-4 rounded border bg-white p-4"
       >
-        {submitError && (
-          <p className="text-sm font-medium text-destructive">{submitError}</p>
-        )}
+        {submitError && <p className="text-sm font-medium text-destructive">{submitError}</p>}
 
         <FormField
           control={form.control}
@@ -203,7 +193,7 @@ export default function VehicleForm({
               <FormLabel>Notes</FormLabel>
               <FormControl>
                 <textarea
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="Optional notes about this vehicle…"
                   {...field}
                 />

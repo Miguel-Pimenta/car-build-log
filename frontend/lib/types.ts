@@ -1,19 +1,9 @@
-export type VehicleStatus =
-  | "PROJECT"
-  | "DAILY"
-  | "SOLD";
+export type VehicleStatus = "PROJECT" | "DAILY" | "SOLD";
 
 export const VEHICLE_STATUSES: VehicleStatus[] = ["PROJECT", "DAILY", "SOLD"];
 
 export type ModificationCategory =
-  | "ENGINE"
-  | "EXHAUST"
-  | "INTAKE"
-  | "SUSPENSION"
-  | "BRAKES"
-  | "TUNING"
-  | "COSMETIC"
-  | "OTHER";
+  "ENGINE" | "EXHAUST" | "INTAKE" | "SUSPENSION" | "BRAKES" | "TUNING" | "COSMETIC" | "OTHER";
 
 export const MODIFICATION_CATEGORIES: ModificationCategory[] = [
   "ENGINE",

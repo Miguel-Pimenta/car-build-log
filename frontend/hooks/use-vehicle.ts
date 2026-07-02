@@ -1,17 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import {
-  deleteVehicle,
-  getModifications,
-  getDynoResults,
-  getVehicleSummary,
-} from "@/lib/api";
+import { deleteVehicle, getModifications, getDynoResults, getVehicleSummary } from "@/lib/api";
 
-import type {
-  DynoResponse,
-  ModificationResponse,
-  VehicleSummaryResponse,
-} from "@/lib/types";
+import type { DynoResponse, ModificationResponse, VehicleSummaryResponse } from "@/lib/types";
 
 import { vehicleKeys } from "./use-vehicles";
 

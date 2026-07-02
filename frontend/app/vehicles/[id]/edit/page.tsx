@@ -34,12 +34,8 @@ export default function EditVehiclePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Edit vehicle</h1>
-      <VehicleForm
-        initialValue={initialValue}
-        onSubmit={handleUpdate}
-        submitLabel="Save changes"
-      />
+      <h1 className="mb-4 text-2xl font-bold">Edit vehicle</h1>
+      <VehicleForm initialValue={initialValue} onSubmit={handleUpdate} submitLabel="Save changes" />
     </div>
   );
 }

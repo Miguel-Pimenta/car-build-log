@@ -13,10 +13,7 @@ import {
   useDynoResults,
   useDeleteVehicle,
 } from "@/hooks/use-vehicle";
-import {
-  useCreateModification,
-  useDeleteModification,
-} from "@/hooks/use-modifications";
+import { useCreateModification, useDeleteModification } from "@/hooks/use-modifications";
 import { useCreateDynoResult } from "@/hooks/use-dyno";
 
 export default function VehicleDetailPage() {
@@ -54,20 +51,15 @@ export default function VehicleDetailPage() {
             <StatusBadge status={vehicle.status} />
           </div>
           <p className="text-gray-500">{vehicle.engineCode}</p>
-          {vehicle.notes && (
-            <p className="mt-1 text-gray-600">{vehicle.notes}</p>
-          )}
+          {vehicle.notes && <p className="mt-1 text-gray-600">{vehicle.notes}</p>}
         </div>
-        <div className="flex gap-2 shrink-0">
-          <Link
-            href={`/vehicles/${id}/edit`}
-            className="border px-3 py-1.5 rounded"
-          >
+        <div className="flex shrink-0 gap-2">
+          <Link href={`/vehicles/${id}/edit`} className="rounded border px-3 py-1.5">
             Edit
           </Link>
           <button
             onClick={handleDeleteVehicle}
-            className="border border-red-300 text-red-700 px-3 py-1.5 rounded"
+            className="rounded border border-red-300 px-3 py-1.5 text-red-700"
           >
             Delete
           </button>
@@ -76,38 +68,30 @@ export default function VehicleDetailPage() {
 
       {summary && (
         <section>
-          <h2 className="text-lg font-semibold mb-2">Summary</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <h2 className="mb-2 text-lg font-semibold">Summary</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="Modifications" value={summary.totalModifications} />
             <Stat label="Total spend" value={formatMoney(summary.totalSpend)} />
             <Stat
               label="Power"
-              value={
-                summary.currentPowerHp !== null
-                  ? `${summary.currentPowerHp} HP`
-                  : "—"
-              }
+              value={summary.currentPowerHp !== null ? `${summary.currentPowerHp} HP` : "—"}
             />
             <Stat
               label="Torque"
-              value={
-                summary.currentTorqueNm !== null
-                  ? `${summary.currentTorqueNm} Nm`
-                  : "—"
-              }
+              value={summary.currentTorqueNm !== null ? `${summary.currentTorqueNm} Nm` : "—"}
             />
           </div>
         </section>
       )}
 
       <section>
-        <h2 className="text-lg font-semibold mb-2">
+        <h2 className="mb-2 text-lg font-semibold">
           Modifications ({modsLoading ? "…" : mods.length})
         </h2>
         {!modsLoading && mods.length === 0 ? (
-          <p className="text-gray-500 mb-3">No modifications yet.</p>
+          <p className="mb-3 text-gray-500">No modifications yet.</p>
         ) : (
-          <ul className="space-y-2 mb-3">
+          <ul className="mb-3 space-y-2">
             {/* Each row is its own component because it calls a hook (useDeleteModification);
                 hooks can't run inside .map(), so the per-row hook lives in ModificationRow. */}
             {mods.map((mod) => (
@@ -119,15 +103,15 @@ export default function VehicleDetailPage() {
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold mb-2">
+        <h2 className="mb-2 text-lg font-semibold">
           Dyno results ({dynosLoading ? "…" : dynos.length})
         </h2>
         {!dynosLoading && dynos.length === 0 ? (
-          <p className="text-gray-500 mb-3">No dyno runs yet.</p>
+          <p className="mb-3 text-gray-500">No dyno runs yet.</p>
         ) : (
-          <ul className="space-y-2 mb-3">
+          <ul className="mb-3 space-y-2">
             {dynos.map((dyno) => (
-              <li key={dyno.id} className="bg-white border rounded p-3">
+              <li key={dyno.id} className="rounded border bg-white p-3">
                 <p className="font-medium">
                   {dyno.powerHp} HP · {dyno.torqueNm} Nm
                 </p>
@@ -147,7 +131,7 @@ export default function VehicleDetailPage() {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="bg-white border rounded p-3">
+    <div className="rounded border bg-white p-3">
       <p className="text-xs text-gray-500">{label}</p>
       <p className="text-xl font-bold">{value}</p>
     </div>
@@ -162,17 +146,23 @@ function ModificationRow({
   mod,
   vehicleId,
 }: {
-  mod: { id: string; name: string; category: string; cost: number; installedAt: string; mileageKmAtInstall: number };
+  mod: {
+    id: string;
+    name: string;
+    category: string;
+    cost: number;
+    installedAt: string;
+    mileageKmAtInstall: number;
+  };
   vehicleId: string;
 }) {
   const deleteMod = useDeleteModification(vehicleId);
 
   return (
-    <li className="bg-white border rounded p-3 flex justify-between items-start gap-3">
+    <li className="flex items-start justify-between gap-3 rounded border bg-white p-3">
       <div>
         <p className="font-medium">
-          {mod.name}{" "}
-          <span className="text-xs text-gray-500">({mod.category})</span>
+          {mod.name} <span className="text-xs text-gray-500">({mod.category})</span>
         </p>
         <p className="text-sm text-gray-500">
           {formatMoney(mod.cost)} · {mod.installedAt} · {mod.mileageKmAtInstall} km
@@ -181,7 +171,7 @@ function ModificationRow({
       <button
         onClick={() => deleteMod.mutate(mod.id)}
         disabled={deleteMod.isPending}
-        className="text-red-600 text-sm shrink-0 disabled:opacity-50"
+        className="shrink-0 text-sm text-red-600 disabled:opacity-50"
       >
         {deleteMod.isPending ? "Deleting…" : "Delete"}
       </button>
@@ -214,19 +204,14 @@ function AddModificationForm({ vehicleId }: { vehicleId: string }) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white border rounded p-3 space-y-2"
-    >
-      <p className="font-medium text-sm">Add a modification</p>
-      {createMod.error && (
-        <p className="text-red-600 text-sm">{createMod.error.message}</p>
-      )}
-      <div className="grid sm:grid-cols-2 gap-2">
+    <form onSubmit={handleSubmit} className="space-y-2 rounded border bg-white p-3">
+      <p className="text-sm font-medium">Add a modification</p>
+      {createMod.error && <p className="text-sm text-red-600">{createMod.error.message}</p>}
+      <div className="grid gap-2 sm:grid-cols-2">
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as ModificationCategory)}
-          className="border rounded px-2 py-1.5"
+          className="rounded border px-2 py-1.5"
         >
           {MODIFICATION_CATEGORIES.map((c) => (
             <option key={c} value={c}>
@@ -238,33 +223,33 @@ function AddModificationForm({ vehicleId }: { vehicleId: string }) {
           placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="border rounded px-2 py-1.5"
+          className="rounded border px-2 py-1.5"
         />
         <input
           placeholder="Cost (€)"
           type="number"
           value={cost}
           onChange={(e) => setCost(e.target.value)}
-          className="border rounded px-2 py-1.5"
+          className="rounded border px-2 py-1.5"
         />
         <input
           type="date"
           value={installedAt}
           onChange={(e) => setInstalledAt(e.target.value)}
-          className="border rounded px-2 py-1.5"
+          className="rounded border px-2 py-1.5"
         />
         <input
           placeholder="Mileage (km)"
           type="number"
           value={mileage}
           onChange={(e) => setMileage(e.target.value)}
-          className="border rounded px-2 py-1.5"
+          className="rounded border px-2 py-1.5"
         />
       </div>
       <button
         type="submit"
         disabled={createMod.isPending}
-        className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm disabled:opacity-50"
+        className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
       >
         {createMod.isPending ? "Adding…" : "Add"}
       </button>
@@ -295,46 +280,41 @@ function AddDynoForm({ vehicleId }: { vehicleId: string }) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white border rounded p-3 space-y-2"
-    >
-      <p className="font-medium text-sm">Add a dyno result</p>
-      {createDyno.error && (
-        <p className="text-red-600 text-sm">{createDyno.error.message}</p>
-      )}
-      <div className="grid sm:grid-cols-2 gap-2">
+    <form onSubmit={handleSubmit} className="space-y-2 rounded border bg-white p-3">
+      <p className="text-sm font-medium">Add a dyno result</p>
+      {createDyno.error && <p className="text-sm text-red-600">{createDyno.error.message}</p>}
+      <div className="grid gap-2 sm:grid-cols-2">
         <input
           placeholder="Power (HP)"
           type="number"
           value={powerHp}
           onChange={(e) => setPowerHp(e.target.value)}
-          className="border rounded px-2 py-1.5"
+          className="rounded border px-2 py-1.5"
         />
         <input
           placeholder="Torque (Nm)"
           type="number"
           value={torqueNm}
           onChange={(e) => setTorqueNm(e.target.value)}
-          className="border rounded px-2 py-1.5"
+          className="rounded border px-2 py-1.5"
         />
         <input
           type="date"
           value={measuredAt}
           onChange={(e) => setMeasuredAt(e.target.value)}
-          className="border rounded px-2 py-1.5"
+          className="rounded border px-2 py-1.5"
         />
         <input
           placeholder="Notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="border rounded px-2 py-1.5"
+          className="rounded border px-2 py-1.5"
         />
       </div>
       <button
         type="submit"
         disabled={createDyno.isPending}
-        className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm disabled:opacity-50"
+        className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
       >
         {createDyno.isPending ? "Adding…" : "Add"}
       </button>

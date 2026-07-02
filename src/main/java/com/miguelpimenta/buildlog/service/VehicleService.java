@@ -77,15 +77,15 @@ public class VehicleService {
   }
 
   /**
-   * Loads a vehicle or throws 404. Shared with the modification, dyno and summary
-   * services so the
+   * Loads a vehicle or throws 404. Shared with the modification, dyno and summary services so the
    * not-found behaviour lives in one place.
    */
   public Vehicle getEntity(UUID id) {
     // orElseThrow turns the empty Optional into a 404 instead of returning null.
-    Vehicle vehicle = vehicleRepository
-        .findById(id)
-        .orElseThrow(() -> ResourceNotFoundException.of("Vehicle", id));
+    Vehicle vehicle =
+        vehicleRepository
+            .findById(id)
+            .orElseThrow(() -> ResourceNotFoundException.of("Vehicle", id));
     UUID currentUserId = currentUserService.getCurrentUser().getId();
 
     // IDOR defense: someone else's vehicle is reported as 404 (not 403) so we don't

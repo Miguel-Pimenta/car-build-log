@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
- * Translates exceptions into the consistent {@link ErrorResponse} shape so the
- * API never leaks
+ * Translates exceptions into the consistent {@link ErrorResponse} shape so the API never leaks
  * stack traces or framework-specific error pages.
  */
 // @RestControllerAdvice: one central place that catches exceptions thrown by

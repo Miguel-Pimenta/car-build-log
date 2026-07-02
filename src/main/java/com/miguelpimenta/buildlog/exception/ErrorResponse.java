@@ -6,10 +6,8 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 
 /**
- * Consistent error body returned for every handled exception:
- * {@code { "timestamp", "status",
- * "error", "message" }}. Validation failures additionally carry a
- * {@code fieldErrors} map; it is
+ * Consistent error body returned for every handled exception: {@code { "timestamp", "status",
+ * "error", "message" }}. Validation failures additionally carry a {@code fieldErrors} map; it is
  * omitted when empty.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

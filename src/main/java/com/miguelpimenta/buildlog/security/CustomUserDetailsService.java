@@ -22,9 +22,10 @@ public class CustomUserDetailsService implements UserDetailsService {
   // UserDetails contract.
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    User user = userRepository
-        .findByUsername(username)
-        .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    User user =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
     // "ROLE_" prefix is the Spring convention that lets hasRole("USER") checks
     // match this
