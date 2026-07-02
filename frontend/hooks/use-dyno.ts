@@ -8,6 +8,8 @@ export function useCreateDynoResult(vehicleId: string) {
   return useMutation<DynoResponse, Error, DynoRequest>({
     mutationFn: (data) => createDynoResult(vehicleId, data),
     onSuccess: () => {
+      // Refetch the dyno list AND the summary — the summary's current power/torque
+      // comes from the latest dyno run, so a new run makes it stale.
       queryClient.invalidateQueries({ queryKey: vehicleKeys.dyno(vehicleId) });
       queryClient.invalidateQueries({
         queryKey: vehicleKeys.summary(vehicleId),

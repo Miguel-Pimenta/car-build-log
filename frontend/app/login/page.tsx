@@ -1,4 +1,4 @@
-"use client";
+"use client"; // form state + submit handler need the client
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -18,8 +18,8 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(username, password); // stores the token on success
-      router.push("/"); // logged in -> go to the app
-      router.refresh(); // re-run the home page's data fetch
+      router.push("/"); // client-side navigation to the app (no full reload)
+      router.refresh(); // re-fetch server data for "/" so it renders as the logged-in user
     } catch {
       setError("Invalid username or password");
       setSubmitting(false);

@@ -43,6 +43,8 @@ public class VehicleSummaryService {
 
     List<Modification> mods = modificationRepository.findByVehicleId(vehicleId);
 
+    // reduce sums the costs starting from ZERO; BigDecimal (not double) avoids floating-point money
+    // errors.
     BigDecimal totalSpend =
         mods.stream().map(Modification::getCost).reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -50,6 +52,8 @@ public class VehicleSummaryService {
     Map<ModificationCategory, BigDecimal> spendByCategory =
         new EnumMap<>(ModificationCategory.class);
     for (Modification mod : mods) {
+      // merge: insert the cost the first time a category is seen, otherwise add to the running
+      // total.
       spendByCategory.merge(mod.getCategory(), mod.getCost(), BigDecimal::add);
     }
 

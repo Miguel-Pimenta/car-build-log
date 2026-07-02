@@ -29,9 +29,11 @@ import lombok.Setter;
 public class DynoResult {
 
   @Id
+  // Random UUID primary key generated on persist.
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
+  // Many dyno results to one vehicle; LAZY parent load, vehicle_id FK lives on this table.
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "vehicle_id", nullable = false)
   private Vehicle vehicle;
@@ -51,6 +53,7 @@ public class DynoResult {
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
+  // Stamp the creation timestamp just before the first INSERT.
   @PrePersist
   void onCreate() {
     this.createdAt = Instant.now();

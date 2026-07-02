@@ -1,22 +1,24 @@
 package com.miguelpimenta.buildlog.security;
 
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
 import com.miguelpimenta.buildlog.model.User;
 import com.miguelpimenta.buildlog.repository.UserRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CurrentUserService {
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
-    public CurrentUserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+  public CurrentUserService(UserRepository userRepository) {
+    this.userRepository = userRepository;
+  }
 
-    public User getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+  public User getCurrentUser() {
+    // The JWT filter stored the principal here earlier in the request; read its username back out.
+    String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalStateException("Authenticated user not found: " + username));
-    }
+    return userRepository
+        .findByUsername(username)
+        .orElseThrow(() -> new IllegalStateException("Authenticated user not found: " + username));
+  }
 }

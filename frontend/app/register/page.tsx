@@ -1,4 +1,4 @@
-"use client";
+"use client"; // form state + submit handler need the client
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -19,9 +19,10 @@ export default function RegisterPage() {
     setError("");
     setSubmitting(true);
     try {
+      // name || undefined: send undefined (omit the field) rather than an empty string
       await register({ username, email, password, name: name || undefined });
       router.push("/"); // register() already stored the token
-      router.refresh();
+      router.refresh(); // re-fetch "/" server data now that we're authenticated
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
       setSubmitting(false);

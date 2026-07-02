@@ -6,8 +6,7 @@ import jakarta.validation.constraints.Size;
 
 /** Inbound payload for registering a new account. */
 public record RegisterRequest(
-        @NotBlank String username,
-        @Email @NotBlank String email,
-        @NotBlank @Size(min = 8) String password,
-        String name) {
-}
+    @NotBlank String username,
+    @Email @NotBlank String email,
+    @NotBlank @Size(min = 8) String password,
+    String name) {}

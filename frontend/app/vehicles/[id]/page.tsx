@@ -20,6 +20,7 @@ import {
 import { useCreateDynoResult } from "@/hooks/use-dyno";
 
 export default function VehicleDetailPage() {
+  // useParams reads the dynamic [id] segment from the URL; it's typed loosely, hence the cast
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function VehicleDetailPage() {
 
   async function handleDeleteVehicle() {
     if (!window.confirm("Delete this vehicle and everything in it?")) return;
+    // mutateAsync returns a promise, so we can await the delete before navigating away
     await deleteVehicle.mutateAsync(id);
     router.push("/");
   }
@@ -106,6 +108,8 @@ export default function VehicleDetailPage() {
           <p className="text-gray-500 mb-3">No modifications yet.</p>
         ) : (
           <ul className="space-y-2 mb-3">
+            {/* Each row is its own component because it calls a hook (useDeleteModification);
+                hooks can't run inside .map(), so the per-row hook lives in ModificationRow. */}
             {mods.map((mod) => (
               <ModificationRow key={mod.id} mod={mod} vehicleId={id} />
             ))}

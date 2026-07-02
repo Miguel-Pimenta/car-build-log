@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+// Read-only transactions by default; the write method below opts in with a plain @Transactional.
 @Transactional(readOnly = true)
 public class DynoService {
 

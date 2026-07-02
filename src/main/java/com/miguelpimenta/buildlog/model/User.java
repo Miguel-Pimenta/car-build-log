@@ -21,6 +21,7 @@ import lombok.Setter;
 public class User {
 
   @Id
+  // Random UUID primary key generated on persist.
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
@@ -32,9 +33,11 @@ public class User {
   @Column(unique = true, nullable = false)
   private String username;
 
+  // Stores the BCrypt hash, never the raw password.
   @Column(name = "password_hash", nullable = false)
   private String passwordHash;
 
+  // Persist role by name; defaults to USER for newly created accounts.
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 32)
   private Role role = Role.USER;

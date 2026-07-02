@@ -35,8 +35,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      // Attach JWT as a Bearer header so the API knows who's calling; spread only when present
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options?.headers,
+      ...options?.headers, // caller-supplied headers win (spread last)
     },
   });
 
@@ -48,11 +49,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   }
 
   if (!response.ok) {
+    // Try to surface the API's error message; .catch guards against non-JSON error bodies
     const body = await response.json().catch(() => null);
     throw new Error(body?.message ?? `Request failed (${response.status})`);
   }
 
-  if (response.status === 204) return undefined as T;
+  if (response.status === 204) return undefined as T; // 204 No Content has no body to parse
 
   return response.json();
 }

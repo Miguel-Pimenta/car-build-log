@@ -1,4 +1,4 @@
-"use client";
+"use client"; // uses hooks (useState) + event handlers, so this page is a Client Component
 
 import { useState } from "react";
 import Link from "next/link";
@@ -16,9 +16,12 @@ import { VEHICLE_STATUSES, VehicleStatus } from "@/lib/types";
 
 export default function HomePage() {
   const [search, setSearch] = useState("");
+  // Query on the debounced value (300ms after typing stops), not every keystroke,
+  // so we don't fire a request per character.
   const debouncedSearch = useDebounce(search, 300);
   const [status, setStatus] = useState<VehicleStatus | "ALL">("ALL");
 
+  // Map the UI-only "ALL" sentinel to undefined so the API sees "no status filter".
   const {
     data: vehicles,
     isLoading,

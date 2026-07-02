@@ -11,6 +11,7 @@ export default function NewVehiclePage() {
   const createVehicle = useCreateVehicle();
 
   async function handleCreate(data: VehicleRequest) {
+    // mutateAsync resolves to the API's response, so we can navigate to the new vehicle's id
     const created = await createVehicle.mutateAsync(data);
     router.push(`/vehicles/${created.id}`);
   }

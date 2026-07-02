@@ -27,6 +27,8 @@ const vehicleSchema = z.object({
   make: z.string().min(1, "Make is required").max(100),
   model: z.string().min(1, "Model is required").max(100),
 
+  // z.coerce.number() runs Number(x) BEFORE validating, so the text input's "1993"
+  // string becomes a real number that .int()/.min()/.max() can then check.
   year: z.coerce
     .number({ message: "Year must be a number" })
     .int("Year must be a whole number")
@@ -41,12 +43,12 @@ const vehicleSchema = z.object({
     .string()
     .max(2000, "Notes must be 2000 characters or fewer")
     .optional()
-    .transform((v) => (v === "" ? undefined : v)),
+    .transform((v) => (v === "" ? undefined : v)), // send undefined, not "", when blank
 });
 
-type VehicleFormInput = z.input<typeof vehicleSchema>;
-
-type VehicleFormOutput = z.output<typeof vehicleSchema>;
+// coerce + transform make the pre-parse and post-parse shapes differ, so Zod exposes two:
+type VehicleFormInput = z.input<typeof vehicleSchema>; // what the form fields hold (year is a string)
+type VehicleFormOutput = z.output<typeof vehicleSchema>; // what validation produces (year is a number)
 
 interface VehicleFormProps {
   initialValue?: VehicleRequest;
@@ -62,6 +64,7 @@ export default function VehicleForm({
   const [submitError, setSubmitError] = useState("");
 
   const form = useForm<VehicleFormInput>({
+    // zodResolver hands validation to the Zod schema above, so RHF errors mirror the schema rules
     resolver: zodResolver(vehicleSchema),
     defaultValues: {
       make: initialValue?.make ?? "",
@@ -87,6 +90,8 @@ export default function VehicleForm({
   return (
     <Form {...form}>
       <form
+        // handleSubmit runs validation first and only calls our handler if the form is valid.
+        // The cast reconciles the input-typed form with our output-typed (post-coerce) handler.
         onSubmit={form.handleSubmit(
           handleValidSubmit as Parameters<typeof form.handleSubmit>[0],
         )}
@@ -131,6 +136,8 @@ export default function VehicleForm({
             <FormItem>
               <FormLabel>Year</FormLabel>
               <FormControl>
+                {/* Fields spread out (not {...field}) so we can force value to a string:
+                    a controlled input must never receive undefined, or React warns. */}
                 <Input
                   type="number"
                   placeholder="e.g. 1993"
@@ -168,6 +175,8 @@ export default function VehicleForm({
             <FormItem>
               <FormLabel>Status</FormLabel>
               <FormControl>
+                {/* Select isn't a native <input>, so we wire RHF's field manually:
+                    field.value drives the shown option, field.onChange records changes. */}
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select status" />

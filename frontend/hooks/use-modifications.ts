@@ -8,6 +8,8 @@ export function useCreateModification(vehicleId: string) {
   return useMutation<ModificationResponse, Error, ModificationRequest>({
     mutationFn: (data) => createModification(vehicleId, data),
     onSuccess: () => {
+      // Refetch the mods list AND the summary — the summary's spend/count totals are
+      // derived from modifications, so they'd be stale otherwise.
       queryClient.invalidateQueries({
         queryKey: vehicleKeys.modifications(vehicleId),
       });

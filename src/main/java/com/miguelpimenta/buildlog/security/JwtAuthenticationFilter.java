@@ -14,12 +14,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Reads a {@code Authorization: Bearer <token>} header, validates the JWT, and
- * populates the {@link
- * SecurityContextHolder} with an authenticated principal. Any
- * parsing/validation problem leaves the
- * request unauthenticated; downstream authorization rules then decide the
- * outcome.
+ * Reads a {@code Authorization: Bearer <token>} header, validates the JWT, and populates the {@link
+ * SecurityContextHolder} with an authenticated principal. Any parsing/validation problem leaves the
+ * request unauthenticated; downstream authorization rules then decide the outcome.
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -43,6 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
 
     String header = request.getHeader("Authorization");
+    // Only act on "Bearer <token>" headers, and skip if the request is already authenticated.
     if (header != null
         && header.startsWith(BEARER_PREFIX)
         && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -52,9 +50,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (username != null) {
           UserDetails userDetails = userDetailsService.loadUserByUsername(username);
           if (jwtService.isTokenValid(token, userDetails.getUsername())) {
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
+            // Credentials are null: the valid JWT is the proof, so no password is needed here.
+            UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            // Storing this marks the request authenticated for the rest of the filter chain and
+            // controllers.
             SecurityContextHolder.getContext().setAuthentication(authentication);
           }
         }

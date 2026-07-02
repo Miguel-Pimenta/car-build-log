@@ -11,6 +11,7 @@ each tied to the actual file where it shows up. Read top to bottom or jump aroun
 - [6. The persistence context: saving without calling save()](#6-the-persistence-context)
 - [7. Entity lifecycle states](#7-entity-lifecycle-states)
 - [8. Global exception handling](#8-global-exception-handling)
+- [9. Authentication & authorization (Spring Security + JWT)](#9-authentication--authorization-spring-security--jwt)
 - [Glossary](#glossary)
 
 ---
@@ -351,6 +352,113 @@ turns it into the consistent JSON shape defined by `ErrorResponse`
 
 ---
 
+## 9. Authentication & authorization (Spring Security + JWT)
+
+Two different questions the app has to answer:
+
+- **Authentication** = _who are you?_ (logging in)
+- **Authorization** = _what are you allowed to do?_ (you may only touch your own vehicles)
+
+### 9.1 Stateless auth with a JWT
+
+HTTP has no memory — every request arrives as a stranger. Two ways to "stay logged in":
+
+- **Sessions:** the server keeps a guest list in memory and hands you a cookie to look you up. Stateful.
+- **JWT (what we use):** the server hands you a signed **token** and remembers nothing. The token _is_
+  the proof; you send it on every request.
+
+A **JWT** carries who you are (its `subject` = username) + an expiry, plus a **signature** made with a
+secret only the server knows (`app.jwt.secret`). Anyone can _read_ a JWT, but nobody can forge or alter
+one without the secret — change a byte and the signature no longer verifies. `security/JwtService.java`
+builds and verifies them (HS256, via the JJWT library).
+
+### 9.2 Passwords are hashed, never stored
+
+`config/SecurityConfig` exposes a **`BCryptPasswordEncoder`** bean. On register we store
+`encoder.encode(rawPassword)` — a one-way **BCrypt hash** (with a random salt) — never the password
+itself. On login the encoder **re-hashes the attempt and compares hashes**, so even our own database
+never knows anyone's real password.
+
+Analogy: a one-way blender. You can turn fruit into a smoothie (hash) but never a smoothie back into
+fruit; to check a password you blend the attempt the same way and compare smoothies.
+
+### 9.3 The security filter chain (`config/SecurityConfig`)
+
+Spring Security is a **chain of servlet filters** that runs _before_ your controllers. Our
+`SecurityFilterChain` bean configures it:
+
+- `sessionCreationPolicy(STATELESS)` — no server sessions; the token carries identity.
+- `csrf.disable()` — safe here (see 9.7).
+- `permitAll()` for `/api/v1/auth/**` and `/actuator/health`; `authenticated()` for everything else.
+- `addFilterBefore(jwtAuthenticationFilter, …)` — slots our token filter into the chain.
+- an `authenticationEntryPoint(new HttpStatusEntryPoint(UNAUTHORIZED))` so unauthenticated requests
+  return **401** rather than Spring's default 403 (see 9.7).
+
+### 9.4 The gatekeeper filter + the SecurityContext
+
+`security/JwtAuthenticationFilter` (a `OncePerRequestFilter`) runs on **every** request: read the
+`Authorization: Bearer <token>` header → verify it with `JwtService` → load the user → put an
+`Authentication` into the **`SecurityContextHolder`**.
+
+The **SecurityContext** is a per-request holder of "who is logged in." The filter _fills_ it; the rest
+of the app _reads_ it. With no valid token the filter simply leaves the request unauthenticated, and
+the chain's rules return 401.
+
+### 9.5 Bridging your `User` to Spring: `UserDetailsService`
+
+Spring Security doesn't know your `model/User` entity — it only speaks the **`UserDetails`** interface
+(username + password hash + roles). `security/CustomUserDetailsService` is the adapter: given a
+username, load your `User` and return a Spring `UserDetails`. It's used both at login (to check the
+password) and in the filter (to load the caller).
+
+### 9.6 Getting a token: `AuthController`
+
+- `POST /api/v1/auth/register` — validates, rejects a duplicate username/email (409), hashes the
+  password, saves the user, returns a token.
+- `POST /api/v1/auth/login` — hands the credentials to the **`AuthenticationManager`** (which uses
+  `UserDetailsService` + the `PasswordEncoder`); on success `JwtService` issues a token; bad
+  credentials → **401**.
+
+### 9.7 401 vs 403, and why CSRF is off
+
+- **401 Unauthorized** = "I don't know who you are" (missing/invalid token). **403 Forbidden** = "I
+  know you, but you can't do this."
+- **CSRF disabled:** CSRF attacks rely on browsers _auto-sending cookies_. A Bearer token is not
+  auto-sent — your code attaches it deliberately — so a token API isn't vulnerable. (You'd keep CSRF on
+  for cookie/session auth.)
+
+### 9.8 Authorization: ownership & IDOR
+
+Each `Vehicle` has an `@ManyToOne` **`owner`** (a `User`). `security/CurrentUserService` reads the
+logged-in user from the SecurityContext (username → `UserRepository.findByUsername`). Then in
+`service/VehicleService`:
+
+- **create** stamps `owner = currentUser` (taken from the token, never from the request body).
+- **list** filters the query to `owner = currentUser` — you only ever see your own.
+- **get / update / delete** load via `getEntity(id)`, which checks the owner and throws the **same
+  404** if the vehicle isn't yours.
+
+Why 404 and not 403 for "not yours"? A 403 would confirm the id _exists_, letting an attacker
+enumerate other people's ids. Returning an identical 404 for both "missing" and "not yours" leaks
+nothing. This closes the **IDOR** (Insecure Direct Object Reference) hole — a valid token alone must
+never be enough to read someone else's row.
+
+### 9.9 The frontend side (token handling)
+
+The browser mirrors this in `frontend/lib/api.ts`:
+
+- After login/register, the returned token is saved in the browser's **`localStorage`**.
+- Every request adds the `Authorization: Bearer <token>` header.
+- A **401** clears the token and redirects to `/login`.
+
+(Simplest approach; `localStorage` is readable by JavaScript, so it's exposed to XSS — an httpOnly
+cookie is the more secure but heavier alternative.)
+
+**Rule of thumb:** authentication proves _who_; authorization (ownership checks) proves _what you may
+touch_. A token gets you in the door; ownership decides which rooms.
+
+---
+
 ## Glossary
 
 - **Bean** — an object created and managed by Spring's container.
@@ -363,3 +471,11 @@ turns it into the consistent JSON shape defined by `ErrorResponse`
 - **Flush** — sending pending SQL to the DB (happens on commit, among other times).
 - **Transaction** — an all-or-nothing unit of DB work (commit or roll back).
 - **Proxy** — a wrapper Spring puts around a bean to add behaviour like transactions.
+- **Authentication** — proving _who_ you are (here: logging in for a JWT).
+- **Authorization** — deciding _what_ you may do (here: you can only touch your own vehicles).
+- **JWT** — JSON Web Token; a signed, self-contained token carrying your identity + an expiry.
+- **BCrypt** — a one-way, salted password-hashing algorithm; you compare hashes, never plaintext.
+- **SecurityContext** — a per-request holder of "who is logged in," filled by the JWT filter.
+- **Principal** — the authenticated identity in the SecurityContext (here, the username).
+- **IDOR** — Insecure Direct Object Reference; accessing someone else's record by guessing its id. Prevented by the ownership check returning 404.
+- **Stateless** — the server keeps no session; the token carries identity on every request.

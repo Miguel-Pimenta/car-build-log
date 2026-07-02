@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DynoResultRepository extends JpaRepository<DynoResult, UUID> {
 
+  // Derived query: Spring Data parses the method name into SQL, no @Query needed.
   /** All dyno results for a vehicle, newest measurement first. */
   List<DynoResult> findByVehicleIdOrderByMeasuredAtDesc(UUID vehicleId);
 

@@ -1,4 +1,4 @@
-"use client";
+"use client"; // has an onClick handler, so it's a Client Component island inside the layout
 
 import { logout } from "@/lib/api";
 

@@ -27,6 +27,7 @@ import lombok.Setter;
 public class Vehicle {
 
   @Id
+  // Hibernate generates a random UUID primary key on persist (no DB sequence / auto-increment).
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
@@ -42,6 +43,8 @@ public class Vehicle {
   @Column(name = "engine_code", nullable = false)
   private String engineCode;
 
+  // EnumType.STRING stores the enum's name (e.g. "PROJECT") not its ordinal, so reordering the enum
+  // is safe.
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false, length = 32)
   private VehicleStatus status;
@@ -52,10 +55,15 @@ public class Vehicle {
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
+  // Many vehicles to one owner. LAZY = don't load the User until accessed; optional=false = FK is
+  // required.
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  // @JoinColumn names the foreign-key column (owner_id) on this (the "many") side's table.
   @JoinColumn(name = "owner_id", nullable = false)
   private User owner;
 
+  // @PrePersist: Hibernate callback that runs just before the first INSERT, stamping the creation
+  // time.
   @PrePersist
   void onCreate() {
     this.createdAt = Instant.now();
