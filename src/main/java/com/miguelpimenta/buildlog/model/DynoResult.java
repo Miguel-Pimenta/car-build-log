@@ -18,7 +18,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A dyno (rolling-road) measurement for a {@link Vehicle}, capturing peak power and torque on a
+ * A dyno (rolling-road) measurement for a {@link Vehicle}, capturing peak power
+ * and torque on a
  * given date.
  */
 @Entity
@@ -33,7 +34,8 @@ public class DynoResult {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  // Many dyno results to one vehicle; LAZY parent load, vehicle_id FK lives on this table.
+  // Many dyno results to one vehicle; LAZY parent load, vehicle_id FK lives on
+  // this table.
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "vehicle_id", nullable = false)
   private Vehicle vehicle;

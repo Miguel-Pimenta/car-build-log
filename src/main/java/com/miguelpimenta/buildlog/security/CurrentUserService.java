@@ -14,7 +14,8 @@ public class CurrentUserService {
   }
 
   public User getCurrentUser() {
-    // The JWT filter stored the principal here earlier in the request; read its username back out.
+    // The JWT filter stored the principal here earlier in the request; read its
+    // username back out.
     String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
     return userRepository

@@ -31,13 +31,13 @@ public class ModificationController {
   public ResponseEntity<ModificationResponse> add(
       @PathVariable UUID vehicleId, @Valid @RequestBody ModificationRequest request) {
     ModificationResponse created = modificationService.addToVehicle(vehicleId, request);
-    // Created under /vehicles/{id}/modifications but the canonical URL is /modifications/{id}, so
+    // Created under /vehicles/{id}/modifications but the canonical URL is
+    // /modifications/{id}, so
     // build from the context root.
-    URI location =
-        ServletUriComponentsBuilder.fromCurrentContextPath()
-            .path("/api/v1/modifications/{id}")
-            .buildAndExpand(created.id())
-            .toUri();
+    URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
+        .path("/api/v1/modifications/{id}")
+        .buildAndExpand(created.id())
+        .toUri();
     return ResponseEntity.created(location).body(created);
   }
 

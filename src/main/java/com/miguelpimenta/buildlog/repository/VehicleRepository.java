@@ -11,10 +11,11 @@ import org.springframework.data.jpa.repository.Query;
 
 // Extending JpaRepository gives CRUD + paging for free; only custom queries need to be declared.
 public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
-  // Optional filters: "(:x IS NULL OR ...)" means a null param disables that condition,
-  // so one query serves all combinations of search/status without dynamic query building.
-  @Query(
-      """
+  // Optional filters: "(:x IS NULL OR ...)" means a null param disables that
+  // condition,
+  // so one query serves all combinations of search/status without dynamic query
+  // building.
+  @Query("""
         SELECT v FROM Vehicle v
         WHERE v.owner = :owner
           AND (:status IS NULL OR v.status = :status)

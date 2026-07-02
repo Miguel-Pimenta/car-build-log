@@ -24,7 +24,8 @@ public class DynoController {
     this.dynoService = dynoService;
   }
 
-  // No single-result GET is exposed, so we return 201 + body without a Location header.
+  // No single-result GET is exposed, so we return 201 + body without a Location
+  // header.
   @PostMapping
   public ResponseEntity<DynoResponse> add(
       @PathVariable UUID vehicleId, @Valid @RequestBody DynoRequest request) {

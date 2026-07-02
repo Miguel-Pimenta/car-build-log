@@ -17,16 +17,17 @@ public class CustomUserDetailsService implements UserDetailsService {
     this.userRepository = userRepository;
   }
 
-  // Spring Security calls this to look up an account; we adapt our own User entity into its
+  // Spring Security calls this to look up an account; we adapt our own User
+  // entity into its
   // UserDetails contract.
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    User user =
-        userRepository
-            .findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    User user = userRepository
+        .findByUsername(username)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-    // "ROLE_" prefix is the Spring convention that lets hasRole("USER") checks match this
+    // "ROLE_" prefix is the Spring convention that lets hasRole("USER") checks
+    // match this
     // authority.
     return org.springframework.security.core.userdetails.User.builder()
         .username(user.getUsername())

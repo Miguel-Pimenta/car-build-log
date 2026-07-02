@@ -20,7 +20,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Public authentication endpoints: register a new user and log in to obtain a JWT. */
+/**
+ * Public authentication endpoints: register a new user and log in to obtain a
+ * JWT.
+ */
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -67,12 +70,14 @@ public class AuthController {
   @PostMapping("/login")
   public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
     try {
-      // Delegates to Spring: loads the user, checks the BCrypt password, throws if they don't
+      // Delegates to Spring: loads the user, checks the BCrypt password, throws if
+      // they don't
       // match.
       authenticationManager.authenticate(
           new UsernamePasswordAuthenticationToken(request.username(), request.password()));
     } catch (AuthenticationException ex) {
-      // Generic message on purpose: don't reveal whether the username or the password was wrong.
+      // Generic message on purpose: don't reveal whether the username or the password
+      // was wrong.
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
     }
     String token = jwtService.generateToken(request.username());

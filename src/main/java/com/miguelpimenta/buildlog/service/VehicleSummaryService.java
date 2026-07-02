@@ -17,8 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Builds the derived {@code /summary} view: counts modifications, sums spend (overall and per
- * category), and pulls the latest dyno figures. This is the one piece of genuine business logic
+ * Builds the derived {@code /summary} view: counts modifications, sums spend
+ * (overall and per
+ * category), and pulls the latest dyno figures. This is the one piece of
+ * genuine business logic
  * beyond CRUD, and the part worth unit testing thoroughly.
  */
 @Service
@@ -43,29 +45,27 @@ public class VehicleSummaryService {
 
     List<Modification> mods = modificationRepository.findByVehicleId(vehicleId);
 
-    // reduce sums the costs starting from ZERO; BigDecimal (not double) avoids floating-point money
+    // reduce sums the costs starting from ZERO; BigDecimal (not double) avoids
+    // floating-point money
     // errors.
-    BigDecimal totalSpend =
-        mods.stream().map(Modification::getCost).reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal totalSpend = mods.stream().map(Modification::getCost).reduce(BigDecimal.ZERO, BigDecimal::add);
 
     // EnumMap keeps the breakdown in the enum's declared order for stable output.
-    Map<ModificationCategory, BigDecimal> spendByCategory =
-        new EnumMap<>(ModificationCategory.class);
+    Map<ModificationCategory, BigDecimal> spendByCategory = new EnumMap<>(ModificationCategory.class);
     for (Modification mod : mods) {
-      // merge: insert the cost the first time a category is seen, otherwise add to the running
+      // merge: insert the cost the first time a category is seen, otherwise add to
+      // the running
       // total.
       spendByCategory.merge(mod.getCategory(), mod.getCost(), BigDecimal::add);
     }
 
-    DynoResult latest =
-        dynoResultRepository
-            .findFirstByVehicleIdOrderByMeasuredAtDescCreatedAtDesc(vehicleId)
-            .orElse(null);
+    DynoResult latest = dynoResultRepository
+        .findFirstByVehicleIdOrderByMeasuredAtDescCreatedAtDesc(vehicleId)
+        .orElse(null);
 
-    DynoSnapshot latestDyno =
-        (latest == null)
-            ? null
-            : new DynoSnapshot(latest.getPowerHp(), latest.getTorqueNm(), latest.getMeasuredAt());
+    DynoSnapshot latestDyno = (latest == null)
+        ? null
+        : new DynoSnapshot(latest.getPowerHp(), latest.getTorqueNm(), latest.getMeasuredAt());
     Integer currentPowerHp = (latest == null) ? null : latest.getPowerHp();
     Integer currentTorqueNm = (latest == null) ? null : latest.getTorqueNm();
 

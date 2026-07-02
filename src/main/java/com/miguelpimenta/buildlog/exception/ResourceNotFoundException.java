@@ -1,7 +1,8 @@
 package com.miguelpimenta.buildlog.exception;
 
 /**
- * Thrown by the service layer when an entity cannot be found. Mapped to a 404 response by {@link
+ * Thrown by the service layer when an entity cannot be found. Mapped to a 404
+ * response by {@link
  * GlobalExceptionHandler}.
  */
 public class ResourceNotFoundException extends RuntimeException {
