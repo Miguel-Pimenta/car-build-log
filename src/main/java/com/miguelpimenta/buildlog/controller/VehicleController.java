@@ -33,17 +33,18 @@ public class VehicleController {
   }
 
   @PostMapping
-  // @Valid triggers the bean-validation annotations on VehicleRequest; @RequestBody deserialises
+  // @Valid triggers the bean-validation annotations on VehicleRequest;
+  // @RequestBody deserialises
   // the JSON.
   public ResponseEntity<VehicleResponse> create(@Valid @RequestBody VehicleRequest request) {
     VehicleResponse created = vehicleService.create(request);
-    // Build the new resource's URL for the 201 Location header (REST convention for "here's what I
+    // Build the new resource's URL for the 201 Location header (REST convention for
+    // "here's what I
     // made").
-    URI location =
-        ServletUriComponentsBuilder.fromCurrentRequest()
-            .path("/{id}")
-            .buildAndExpand(created.id())
-            .toUri();
+    URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+        .path("/{id}")
+        .buildAndExpand(created.id())
+        .toUri();
     return ResponseEntity.created(location).body(created);
   }
 
@@ -52,7 +53,8 @@ public class VehicleController {
       // @PageableDefault supplies page/size/sort defaults when the client omits them
       // (?page=&size=&sort=).
       @PageableDefault(size = 20) Pageable pageable,
-      // required=false makes these query params optional; Spring auto-converts the status string to
+      // required=false makes these query params optional; Spring auto-converts the
+      // status string to
       // the enum.
       @RequestParam(required = false) String search,
       @RequestParam(required = false) VehicleStatus status) {
