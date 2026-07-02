@@ -13,11 +13,39 @@ import type {
 const BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
 
+// ---- Auth token (kept in the browser so it survives refreshes) ----
+const TOKEN_KEY = "carbuildlog.token";
+
+function getToken(): string | null {
+  if (typeof window === "undefined") return null; // no localStorage on the server
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function setToken(token: string) {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function logout() {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getToken();
   const response = await fetch(BASE + path, {
-    headers: { "Content-Type": "application/json" },
     ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options?.headers,
+    },
   });
+
+  // 401 = not logged in / token expired. Bounce to the login page — but NOT
+  // while the user is literally trying to log in (so the form can show the error).
+  if (response.status === 401 && !path.startsWith("/auth")) {
+    logout();
+    if (typeof window !== "undefined") window.location.href = "/login";
+  }
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
@@ -27,6 +55,33 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   if (response.status === 204) return undefined as T;
 
   return response.json();
+}
+
+// ---- Auth ----
+
+interface AuthResponse {
+  token: string;
+}
+
+export async function login(username: string, password: string): Promise<void> {
+  const res = await request<AuthResponse>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+  });
+  setToken(res.token);
+}
+
+export async function register(data: {
+  username: string;
+  email: string;
+  password: string;
+  name?: string;
+}): Promise<void> {
+  const res = await request<AuthResponse>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  setToken(res.token);
 }
 
 // ---- Vehicles ----

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Providers } from "./providers";
 import "./globals.css";
+import LogoutButton from "@/components/LogoutButton";
 
 export const metadata: Metadata = {
   title: "Car Build Log",
@@ -21,6 +22,7 @@ export default function RootLayout({
             <Link href="/" className="text-xl font-bold">
               🚗 Car Build Log
             </Link>
+            <LogoutButton />
           </div>
         </header>
 

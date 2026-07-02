@@ -212,6 +212,8 @@ frontend/
 │  ├─ providers.tsx           sets up TanStack Query (Client Component)
 │  ├─ globals.css             Tailwind import + theme variables
 │  ├─ page.tsx                "/"                      → vehicle list + search
+│  ├─ login/page.tsx          "/login"                 → log in
+│  ├─ register/page.tsx       "/register"              → create an account
 │  └─ vehicles/
 │     ├─ new/page.tsx         "/vehicles/new"          → create form
 │     └─ [id]/
@@ -220,6 +222,7 @@ frontend/
 ├─ components/
 │  ├─ VehicleForm.tsx         reusable create/edit form (React Hook Form + Zod)
 │  ├─ StatusBadge.tsx         colored PROJECT/DAILY/SOLD badge
+│  ├─ LogoutButton.tsx        clears the token, redirects to /login (Client Component)
 │  └─ ui/                     shadcn components we own (badge, button, select, form, input, label)
 ├─ hooks/                     the data-access layer (TanStack Query wrappers)
 │  ├─ use-vehicles.ts         vehicleKeys factory + list/single/create/update
@@ -349,7 +352,52 @@ Generated shadcn primitives — edit freely; they're yours.
 
 ---
 
-# Part 7 — Running it
+# Part 7 — Authentication (login, tokens & protected requests)
+
+The backend requires a **JWT** on every request (except `/auth/**` and the health check). So the
+frontend has to log in, hold onto the token, and send it every time. This lives in **`lib/api.ts`**
+plus two pages and a button.
+
+## The flow
+1. **Log in / register** (`/login`, `/register`) → the backend returns a **token** → we save it in the
+   browser's `localStorage`.
+2. **Every request** adds an `Authorization: Bearer <token>` header (in `request()`), which the
+   backend's filter reads to know who you are.
+3. **On 401** (no token / expired) → `request()` clears the token and bounces you to `/login`.
+4. **Log out** → clear the token, hard-redirect to `/login`.
+
+## The token, in `lib/api.ts`
+- `getToken()` / `setToken()` / `logout()` read/write `localStorage` under one key. (The
+  `typeof window === "undefined"` guard exists because Next can run this code on the server, where
+  `localStorage` doesn't exist.)
+- `request()` attaches `Authorization: Bearer <token>` to every call, and on a `401` (for
+  non-`/auth` paths) clears the token and redirects to `/login`.
+- `login(username, password)` and `register({...})` POST to `/auth/login` / `/auth/register` and
+  **store the returned token** on success — so you're immediately authenticated.
+
+> **Where the token lives — the tradeoff.** We use `localStorage`: simplest, survives refreshes, and
+> standard for learning SPAs. Downside: JavaScript can read it, so it's exposed to XSS. The more
+> secure option is an httpOnly cookie (not JS-readable), which needs backend cookie + CSRF handling.
+
+## The pages & the button
+- **`app/login/page.tsx`** — username/password form → `login()` → `router.push("/")`. A bad password
+  returns 401, which `request()` deliberately does *not* redirect on for `/auth` paths, so the form
+  can show "Invalid username or password."
+- **`app/register/page.tsx`** — username/email/password (+ optional name) → `register()` → straight
+  into the app. Surfaces the backend's message (e.g. "Username already taken").
+- **`components/LogoutButton.tsx`** — a **Client Component island**: `layout.tsx` is a Server Component
+  and can't have an `onClick`, so the button lives in its own `"use client"` component that the layout
+  renders. It calls `logout()` and does a hard redirect (a full reload also clears TanStack Query's
+  cache, so the previous user's data can't linger on screen).
+
+## Try the whole loop
+Register a new user → land in *your own* empty garage → add a car → log out → log back in → it's still
+yours. Or log in as the seeded **`demo` / `password123`** to see the sample garage. Open another
+user's car by its id and you get a **404** — the backend's ownership check in action.
+
+---
+
+# Part 8 — Running it
 
 ```bash
 npm install        # first time / after pulling new dependencies
@@ -372,7 +420,7 @@ npm run lint       # eslint
 
 ---
 
-# Part 8 — Glossary
+# Part 9 — Glossary
 
 | Term | Meaning |
 |---|---|
