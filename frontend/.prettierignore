@@ -1,0 +1,9 @@
+# Build output & dependencies
+.next/
+out/
+build/
+node_modules/
+
+# Generated / not worth formatting
+next-env.d.ts
+package-lock.json
