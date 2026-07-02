@@ -13,7 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-// Read-only transactions by default; write methods below opt in with a plain @Transactional.
+// Read-only transactions by default; write methods below opt in with a plain
+// @Transactional.
 @Transactional(readOnly = true)
 public class ModificationService {
 
@@ -32,7 +33,8 @@ public class ModificationService {
 
   @Transactional
   public ModificationResponse addToVehicle(UUID vehicleId, ModificationRequest request) {
-    // Reuse VehicleService.getEntity so the same 404/ownership check guards this nested resource.
+    // Reuse VehicleService.getEntity so the same 404/ownership check guards this
+    // nested resource.
     Vehicle vehicle = vehicleService.getEntity(vehicleId);
     Modification saved = modificationRepository.save(modificationMapper.toEntity(request, vehicle));
 
