@@ -7,6 +7,9 @@ import com.miguelpimenta.buildlog.model.Role;
 import com.miguelpimenta.buildlog.model.User;
 import com.miguelpimenta.buildlog.repository.UserRepository;
 import com.miguelpimenta.buildlog.security.JwtService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,12 +23,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Public authentication endpoints: register a new user and log in to obtain a
- * JWT.
- */
+/** Public authentication endpoints: register a new user and log in to obtain a JWT. */
 @RestController
 @RequestMapping("/api/v1/auth")
+@Tag(name = "Authentication", description = "Register and log in to obtain a JWT.")
+// Empty @SecurityRequirements clears the global bearer requirement: these routes are public.
+@SecurityRequirements
 public class AuthController {
 
   private final UserRepository userRepository;
@@ -44,6 +47,9 @@ public class AuthController {
     this.authenticationManager = authenticationManager;
   }
 
+  @Operation(
+      summary = "Register a new user",
+      description = "Creates an account and returns a JWT, logging the client in immediately.")
   @PostMapping("/register")
   public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
     if (userRepository.existsByUsername(request.username())) {
@@ -67,12 +73,12 @@ public class AuthController {
     return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(token));
   }
 
+  @Operation(summary = "Log in", description = "Validates credentials and returns a JWT.")
   @PostMapping("/login")
   public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
     try {
       // Delegates to Spring: loads the user, checks the BCrypt password, throws if
-      // they don't
-      // match.
+      // they don't match.
       authenticationManager.authenticate(
           new UsernamePasswordAuthenticationToken(request.username(), request.password()));
     } catch (AuthenticationException ex) {
