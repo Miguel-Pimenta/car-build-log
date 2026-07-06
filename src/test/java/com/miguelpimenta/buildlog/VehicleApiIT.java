@@ -20,9 +20,10 @@ import org.springframework.test.web.servlet.MvcResult;
  * End-to-end test against a real PostgreSQL instance started by Testcontainers (wired in via {@link
  * TestcontainersConfiguration} and {@code @ServiceConnection}).
  *
- * <p>Creates a vehicle, adds a modification and a dyno result, then asserts the aggregated summary
- * - exercising controller -> service -> repository -> Postgres. Requires Docker; runs under {@code
- * mvn verify} (Failsafe), not {@code mvn test}.
+ * <p>Registers a user, then (authenticated) creates a vehicle, adds a modification and a dyno
+ * result, and asserts the aggregated summary - exercising controller -> service -> repository ->
+ * Postgres through the real security filter chain. Requires Docker; runs under {@code mvn verify}
+ * (Failsafe), not {@code mvn test}.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,15 +35,34 @@ class VehicleApiIT {
 
   @Test
   void createVehicleAddModificationAndDynoThenSummarise() throws Exception {
+    // Every endpoint except /auth/** requires a JWT, so register a user first to obtain one.
+    MvcResult register =
+        mockMvc
+            .perform(
+                post("/api/v1/auth/register")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {"username":"tester","email":"tester@example.com","password":"password123"}
+                        """))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+    String token =
+        objectMapper.readTree(register.getResponse().getContentAsString()).get("token").asText();
+    // The JwtAuthenticationFilter reads the Authorization header and strips the "Bearer " prefix.
+    String authHeader = "Bearer " + token;
+
     MvcResult created =
         mockMvc
             .perform(
                 post("/api/v1/vehicles")
+                    .header("Authorization", authHeader)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(
                         """
-                                {"make":"Volkswagen","model":"Golf GTI","year":2016,"engineCode":"EA888","notes":"track build"}
-                                """))
+                        {"make":"Volkswagen","model":"Golf GTI","year":2016,"engineCode":"EA888","status":"PROJECT","notes":"track build"}
+                        """))
             .andExpect(status().isCreated())
             .andExpect(header().exists("Location"))
             .andExpect(jsonPath("$.id").exists())
@@ -54,25 +74,28 @@ class VehicleApiIT {
     mockMvc
         .perform(
             post("/api/v1/vehicles/{id}/modifications", vehicleId)
+                .header("Authorization", authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
-                                {"category":"TUNING","name":"Stage 1 remap","cost":450.00,"installedAt":"2024-03-10","mileageKmAtInstall":52000}
-                                """))
+                    {"category":"TUNING","name":"Stage 1 remap","cost":450.00,"installedAt":"2024-03-10","mileageKmAtInstall":52000}
+                    """))
         .andExpect(status().isCreated());
 
     mockMvc
         .perform(
             post("/api/v1/vehicles/{id}/dyno", vehicleId)
+                .header("Authorization", authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
-                                {"powerHp":290,"torqueNm":410,"measuredAt":"2024-03-11"}
-                                """))
+                    {"powerHp":290,"torqueNm":410,"measuredAt":"2024-03-11"}
+                    """))
         .andExpect(status().isCreated());
 
     mockMvc
-        .perform(get("/api/v1/vehicles/{id}/summary", vehicleId))
+        .perform(
+            get("/api/v1/vehicles/{id}/summary", vehicleId).header("Authorization", authHeader))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.vehicleId").value(vehicleId))
         .andExpect(jsonPath("$.totalModifications").value(1))
