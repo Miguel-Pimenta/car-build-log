@@ -1,3 +1,5 @@
+[![Java CI with Maven](https://github.com/Miguel-Pimenta/car-build-log/actions/workflows/maven.yml/badge.svg)](https://github.com/Miguel-Pimenta/car-build-log/actions/workflows/maven.yml)
+
 # Car Build Log
 
 A full-stack app for tracking modified-car builds — vehicles, the modifications made
