@@ -76,7 +76,12 @@ class ModificationServiceTest {
     // The modification exists, but the caller doesn't own its vehicle -> 404, so we
     // never confirm it exists (IDOR defense, same as VehicleService).
     assertThatThrownBy(() -> modificationService.get(modificationId))
-        .isInstanceOf(ResourceNotFoundException.class);
+        .isInstanceOf(ResourceNotFoundException.class)
+        // The message must name the ID the caller asked for and must not mention the
+        // vehicle, otherwise it leaks the parent ID and doubles as an existence oracle:
+        // a missing modification would report a different message than someone else's.
+        .hasMessageContaining(modificationId.toString())
+        .hasMessageNotContaining(vehicleId.toString());
   }
 
   @Test

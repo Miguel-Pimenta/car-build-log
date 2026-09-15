@@ -74,9 +74,15 @@ public class ModificationService {
 
     // The flat /modifications/{id} routes never look a vehicle up, so they would
     // otherwise bypass the owner check that guards the nested routes. Re-run it
-    // here against the parent vehicle: someone else's modification is reported as
-    // 404, matching VehicleService.getEntity.
-    vehicleService.getEntity(modification.getVehicle().getId());
+    // here against the parent vehicle.
+    try {
+      vehicleService.getEntity(modification.getVehicle().getId());
+    } catch (ResourceNotFoundException e) {
+      // Re-throw against the ID the caller actually asked for. Letting the vehicle's
+      // own 404 escape would leak the parent vehicle's ID and, by differing from the
+      // "no such modification" message, confirm that this modification exists.
+      throw ResourceNotFoundException.of("Modification", id);
+    }
 
     return modification;
   }
