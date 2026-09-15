@@ -55,10 +55,10 @@ public class ModificationService {
 
   @Transactional
   public void delete(UUID id) {
-    if (!modificationRepository.existsById(id)) {
-      throw ResourceNotFoundException.of("Modification", id);
-    }
-    modificationRepository.deleteById(id);
+    // Go through getEntity so the ownership check below runs. existsById +
+    // deleteById would skip it, because neither ever loads the row.
+    Modification modification = getEntity(id);
+    modificationRepository.delete(modification);
     log.info("Deleted modification {}", id);
   }
 
@@ -67,8 +67,17 @@ public class ModificationService {
   }
 
   private Modification getEntity(UUID id) {
-    return modificationRepository
-        .findById(id)
-        .orElseThrow(() -> ResourceNotFoundException.of("Modification", id));
+    Modification modification =
+        modificationRepository
+            .findById(id)
+            .orElseThrow(() -> ResourceNotFoundException.of("Modification", id));
+
+    // The flat /modifications/{id} routes never look a vehicle up, so they would
+    // otherwise bypass the owner check that guards the nested routes. Re-run it
+    // here against the parent vehicle: someone else's modification is reported as
+    // 404, matching VehicleService.getEntity.
+    vehicleService.getEntity(modification.getVehicle().getId());
+
+    return modification;
   }
 }
