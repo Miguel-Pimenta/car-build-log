@@ -11,6 +11,10 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password: ""
+  # The migrations target PostgreSQL; this throwaway in-memory database is built
+  # by Hibernate and re-seeded on every restart, so Flyway has nothing to do here.
+  flyway:
+    enabled: false
   jpa:
     hibernate:
       ddl-auto: create-drop

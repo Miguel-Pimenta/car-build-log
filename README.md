@@ -56,6 +56,9 @@ Key decisions:
 - **Consistent errors** — a single `@RestControllerAdvice` maps not-found to `404` and
   validation failures to `400`, always returning the same JSON shape.
 - **Money is `BigDecimal`**, never `double`.
+- **Versioned schema migrations** — Flyway owns the schema (`src/main/resources/db/migration`),
+  and Hibernate runs with `ddl-auto: validate` so a drifted entity fails the build
+  instead of silently altering a production table.
 - **Transactions are explicit** — services are `@Transactional(readOnly = true)` by
   default, and write methods opt in to a read-write transaction.
 - **Config via environment** — the production profile reads the database connection and
@@ -226,6 +229,11 @@ a request end-to-end — authenticate, create a vehicle, add a modification and 
 result, then assert the aggregated summary — exercising the full
 controller → service → repository → DB path.
 
+`MigrationValidationTest` applies the Flyway migrations to an empty database and lets
+Hibernate validate the entities against the result, so entity/migration drift fails the
+build. It runs on H2 so it needs no Docker; `VehicleApiIT` covers the same ground against
+real PostgreSQL under `mvn verify`.
+
 **CI:** every push and pull request to `main` runs `mvn verify` on GitHub Actions
 (see the badge above), so the Testcontainers test runs on every change.
 
@@ -251,8 +259,7 @@ container.
 
 ## What I'd do next
 
-- **Database migrations** — Flyway instead of `ddl-auto`, for versioned, reviewable schema changes.
-- **Broader test coverage** — the auth, modification, and dyno paths are thinner than the vehicle ones.
+- **Broader test coverage** — the auth and dyno paths are thinner than the vehicle ones.
 - **Gate deploys on CI** — Render currently deploys on push independently of the Actions run.
 - **Caching** — cache the read-heavy summary endpoint.
 - **Observability** — structured logging, metrics via Micrometer/Prometheus, request tracing.

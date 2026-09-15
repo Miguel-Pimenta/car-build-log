@@ -8,9 +8,18 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/buildlog}
     username: ${DB_USER:app}
     password: ${DB_PASSWORD:localdev}
+  # Flyway owns the schema (src/main/resources/db/migration). baseline-on-migrate
+  # stamps a pre-existing ddl-auto database as already being at V1 instead of
+  # trying to re-create its tables; an empty database just gets V1 applied.
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
   jpa:
     hibernate:
-      ddl-auto: update
+      # validate, not update: Hibernate checks the entities match the migrated
+      # schema and fails fast on drift, rather than silently altering tables.
+      ddl-auto: validate
     open-in-view: false
     show-sql: true
     properties:
