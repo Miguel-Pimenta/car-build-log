@@ -443,6 +443,27 @@ enumerate other people's ids. Returning an identical 404 for both "missing" and 
 nothing. This closes the **IDOR** (Insecure Direct Object Reference) hole — a valid token alone must
 never be enough to read someone else's row.
 
+**The check protects a _path_, not an entity.** This is the part that's easy to get wrong, and this
+project got it wrong for a while. `Modification` has no owner of its own — it inherits one through
+its vehicle. The nested routes (`/vehicles/{vehicleId}/modifications`) were safe because they
+resolve the vehicle first and so pass through the gate above. But the flat routes
+(`GET`/`DELETE /modifications/{id}`) started from the modification and never looked at a vehicle at
+all, so they walked straight around it: any logged-in user could read or delete someone else's
+modification given its id. The fix is for `ModificationService.getEntity` to walk _up_ to the parent
+vehicle and run it through `VehicleService.getEntity`.
+
+Two follow-on rules that fell out of fixing it:
+
+- **`existsById` can't authorise.** The old `delete` used `existsById` + `deleteById`, which never
+  load the row — and you cannot check an owner on a row you didn't load. Go through the entity.
+- **Keep the error message identical too.** Delegating to `VehicleService` initially let its own
+  `"Vehicle not found: <vehicleId>"` escape, which disclosed the parent id and, by differing from
+  the `"Modification not found"` you get for an unknown id, still let an attacker tell "exists but
+  not yours" from "doesn't exist". The 404 has to be indistinguishable in **body** as well as status.
+
+**Rule of thumb:** add a second route to the same data and you must re-run the ownership check. Ask
+of every new endpoint: _what stops this returning someone else's row?_
+
 ### 9.9 The frontend side (token handling)
 
 The browser mirrors this in `frontend/lib/api.ts`:

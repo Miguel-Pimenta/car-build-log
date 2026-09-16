@@ -49,6 +49,8 @@ export interface VehicleResponse {
   engineCode: string;
   status: VehicleStatus;
   notes?: string;
+  /** Username of the owner. Always the logged-in user, since you only ever see your own. */
+  owner: string;
   createdAt: string;
 }
 

@@ -1,5 +1,10 @@
 # Deploying to AWS (EC2 + RDS, free tier)
 
+> **This is an alternative host, not the live deployment.** The running demo is on
+> Render with a Neon-hosted PostgreSQL — see the Deployment section of the
+> [main README](../README.md). This runbook is kept because the same container runs
+> either place, and EC2 + RDS is the more transferable thing to be able to talk through.
+
 This runbook deploys the API as a Docker container on a single EC2 instance that
 connects to a managed RDS PostgreSQL database. Everything here fits inside the AWS
 free tier. **Tear it down when you're done** (last section) to avoid charges.
@@ -67,7 +72,10 @@ docker run -d --name car-build-log --restart unless-stopped -p 8080:8080 \
   car-build-log
 ```
 
-Hibernate creates the schema on first start (`ddl-auto: update`).
+Flyway builds the schema on first start by applying the migrations in
+`src/main/resources/db/migration`. Hibernate then runs with `ddl-auto: validate` and
+fails startup if the entities don't match — so a failed boot here usually means a
+missing migration, not a bad RDS connection.
 
 ## 6. Verify
 
