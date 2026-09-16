@@ -7,7 +7,6 @@ target/
 .mvn/
 mvnw
 mvnw.cmd
-.claude/
 .idea/
 *.iml
 .vscode/

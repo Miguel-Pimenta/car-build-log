@@ -36,9 +36,6 @@ build/
 # Internal handoff brief - keep out of the public portfolio repo
 PROJECT.md
 
-# Claude Code local state
-.claude/
-
 # Local env files
 .env
 *.env
