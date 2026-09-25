@@ -36,6 +36,9 @@ build/
 # Internal handoff brief - keep out of the public portfolio repo
 PROJECT.md
 
+# Personal study notes and their generated PDF - kept locally, not published
+docs/
+
 # Local env files
 .env
 *.env

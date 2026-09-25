@@ -9,8 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * Applies the Flyway migrations to an empty database and lets Hibernate validate the entities
- * against the result, so entity/migration drift fails the build.
+ * Applies the v1 migrations to an empty database and lets Hibernate validate the entities against
+ * the result, so entity/migration drift fails the build.
  *
  * <p>Runs on H2 in PostgreSQL mode so it works without Docker. {@code VehicleApiIT} covers the same
  * ground against a real PostgreSQL under {@code mvn verify}.

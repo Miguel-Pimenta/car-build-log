@@ -20,8 +20,6 @@ total spend, spend-by-category, and the latest power/torque figures.
 ```
 car-build-log/
 ├── src/, pom.xml     Spring Boot backend (REST API)
-├── docs/CONCEPTS.md  Longer-form notes on the concepts used
-├── docs/DEPLOY.md    Alternative AWS (EC2 + RDS) deployment runbook
 └── frontend/         React / Next.js frontend (see frontend/README.md)
 ```
 
@@ -253,9 +251,9 @@ Browser ──▶ Next.js frontend (Render) ──▶ Spring Boot API in Docker 
 - The database is managed **PostgreSQL on [Neon](https://neon.tech)**, reached over TLS.
 - Render redeploys automatically on every push to `main`.
 
-[`docs/DEPLOY.md`](docs/DEPLOY.md) contains a separate, step-by-step **AWS (EC2 + RDS)**
-runbook — security groups, billing alarm, teardown — as an alternative host for the same
-container.
+Because the image is self-contained and every setting comes from the environment, the same
+container runs unchanged on other hosts — AWS (EC2 + RDS), Fly.io, or a plain VM — by
+supplying the same variables.
 
 ## What I'd do next
 

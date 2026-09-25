@@ -60,8 +60,12 @@ hooks/        TanStack Query hooks (the data-access layer)
 lib/          api.ts (all backend calls), types.ts, utils.ts
 ```
 
-## How it works / learning notes
+## How it works
 
-Explanations of the code and the concepts behind it — the layered architecture, TanStack Query,
-forms, and how **authentication & authorization** work end to end — live in
-**[`../docs/CONCEPTS.md`](../docs/CONCEPTS.md)**.
+All data fetching goes through `lib/api.ts` → the hooks in `hooks/` → components, so every
+backend call lives in one file. Forms use React Hook Form with Zod schemas for validation, and
+TanStack Query handles caching and refetching after a mutation.
+
+Authentication is a JWT kept in `localStorage`, attached as an `Authorization: Bearer` header on
+every request; a `401` clears it and redirects to `/login`. See the
+[backend README](../README.md) for how the API issues and validates it.
